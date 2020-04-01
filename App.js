@@ -1,11 +1,3 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- * @flow strict-local
- */
-
 import React, {useEffect, useState} from 'react';
 import {
   StyleSheet,
@@ -29,8 +21,6 @@ import BleManager from 'react-native-ble-manager';
 
 const BleManagerModule = NativeModules.BleManager;
 const bleManagerEmitter = new NativeEventEmitter(BleManagerModule);
-
-import {Colors} from 'react-native/Libraries/NewAppScreen';
 
 const App = () => {
   const [peripherals, setPeripherals] = useState(new Map());
@@ -136,7 +126,7 @@ const App = () => {
     if (!peripheral.name) {
       peripheral.name = 'NO NAME';
     }
-    //peripheral contains //advertising.serviceUUIDs [] //id //name //rssi
+
     peripherals_temp.set(peripheral.id, peripheral);
     setPeripherals(peripherals_temp);
   };
@@ -164,21 +154,6 @@ const App = () => {
       </React.Fragment>
     );
   };
-
-  let temp_arr = [
-    {
-      advertising: {
-        isConnectable: false,
-        manufacturerData: [Object],
-        serviceData: [Object],
-        serviceUUIDs: [Array],
-        txPowerLevel: -2147483648,
-      },
-      id: '16:C7:03:D3:AD:1E',
-      name: 'NO NAME',
-      rssi: -28,
-    },
-  ];
 
   let render_map = list.map((listItem, index) => {
     return <PeripheralListItem item={listItem} id={index} />;
