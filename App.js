@@ -35,9 +35,11 @@ import {Colors} from 'react-native/Libraries/NewAppScreen';
 const App = () => {
   const [peripherals, setPeripherals] = useState(new Map());
   const [isAdvertising, setIsAdvertising] = useState(false);
+  const [isOnGATT, setIsOnGATT] = useState(false);
   const [list, setList] = useState([]);
   const [isBleSupported, setIsBleSupported] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
+  const [isOnBackground, setIsOnBackground] = useState(false);
   useEffect(() => {
     BleManager.start({showAlert: false}).then(() => {
       // Success code
@@ -89,17 +91,21 @@ const App = () => {
   }, [isBleSupported]);
 
   const startAdvertising = () => {
-    if (isBleSupported)
+    if (isBleSupported) {
       BleModule.advertise((res, err) => {
-        console.log('advertise status', res, err);
+        console.log('ads status', res, err);
         if (res) setIsAdvertising(true);
       });
-    else console.log('Not supported.');
+      BleModule.startServer((res, err) => {
+        console.log('serv status', res, err);
+        if (res) setIsOnGATT(true);
+      });
+    } else console.log('Not supported.');
   };
 
   const stopAdvertising = () => {
-    BleModule.stopAdvertise((res, err) => {
-      console.log('stop advertisement?', res);
+    BleModule.stopBroadcastingGATT((res, res1, err) => {
+      console.log('stop advertisement?', res, res1, err);
       if (res) setIsAdvertising(false);
     });
   };
@@ -184,6 +190,25 @@ const App = () => {
       <SafeAreaView>
         <WhiteSpace size="lg" />
         <WingBlank size="sm">
+          {!isOnBackground ? (
+            <Button
+              onPress={() => setIsOnBackground(true)}
+              style={{borderRadius: 30}}
+              type="primary"
+              disabled>
+              Start Background
+            </Button>
+          ) : (
+            <Button
+              onPress={() => setIsOnBackground(false)}
+              style={{borderRadius: 30}}
+              type="warning">
+              Stop Background
+            </Button>
+          )}
+        </WingBlank>
+        <WhiteSpace size="lg" />
+        <WingBlank size="sm">
           {!isAdvertising ? (
             <Button
               onPress={() => startAdvertising()}
@@ -217,7 +242,8 @@ const App = () => {
         </WingBlank>
         <WhiteSpace size="md" />
         <WingBlank size="lg">
-          <Text> # of devices detected: {list.length}</Text>
+          {isOnGATT ? <Text>GATT Server running.</Text> : null}
+          <Text># of devices detected: {list.length}</Text>
         </WingBlank>
         <FlatList
           data={list}
