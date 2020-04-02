@@ -41,16 +41,14 @@ public class BleModule extends ReactContextBaseJavaModule {
         return "BleModule";
     }
 
-
     private BluetoothLeAdvertiser advertiser;
     private BluetoothManager mBluetoothManager;
     private BluetoothGattServer mBluetoothGattServer;
 
-    private static UUID myUUID = UUID.fromString("CDB7920D-72F1-4D4D-8E47-C090302DBD13");
-
+    private static UUID SERVICE_UUID = UUID.fromString("0000ff01-0000-1000-8000-00805F9B34FB");
 
     @ReactMethod
-    private void advertise(Callback advCallBack) {
+    private void advertise(boolean includeName, Callback advCallBack) {
         BluetoothAdapter bluetoothAdapter = mBluetoothManager.getAdapter();
         advertiser = bluetoothAdapter.getBluetoothLeAdvertiser();
         if (advertiser == null) {
@@ -58,36 +56,38 @@ public class BleModule extends ReactContextBaseJavaModule {
             return;
         }
 
-        AdvertiseSettings settings = new AdvertiseSettings.Builder()
+        AdvertiseSettings advertiseSettings = new AdvertiseSettings.Builder()
                 .setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_BALANCED)
                 .setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_HIGH)
-                .setConnectable(true)
-                .build();
+                .setConnectable(false).build();
 
-        ParcelUuid pUuid = new ParcelUuid(myUUID);
+        byte[] serviceData = "tPH".getBytes(Charset.forName("UTF-8"));
 
-        AdvertiseData data = new AdvertiseData.Builder()
-                .setIncludeDeviceName( false )
-                .addServiceUuid(pUuid)
-                .setIncludeTxPowerLevel(false)
-                .build();
+        AdvertiseData advertiseData = new AdvertiseData.Builder()
+        .setIncludeDeviceName(includeName)
+                .addServiceUuid(new ParcelUuid(SERVICE_UUID))
+                .addServiceData(new ParcelUuid(SERVICE_UUID), serviceData)
+                .setIncludeTxPowerLevel(true).build();
 
-        AdvertiseCallback advertisingCallback = new AdvertiseCallback() {
+        AdvertiseCallback advertiseCallback = new AdvertiseCallback() {
             @Override
             public void onStartSuccess(AdvertiseSettings settingsInEffect) {
-                advCallBack.invoke(true);
                 super.onStartSuccess(settingsInEffect);
+                // String advString = settingsInEffect.toString() +"\n Service Data \n" + advertiseData.getServiceData().toString()
+                // +"\n UUIDs: \n" + advertiseData.getServiceUuids().toString();
+                String advString = settingsInEffect.toString() +"\n Advertised Data \n" + advertiseData.toString();
+                advCallBack.invoke(true, advString);
             }
 
             @Override
             public void onStartFailure(int errorCode) {
                 advCallBack.invoke(false, errorCode);
-                Log.e("BLE", "Advertising onStartFailure: " + errorCode);
+                Toast.makeText(getReactApplicationContext(), "Failed to start advertiser.", Toast.LENGTH_SHORT).show();
                 super.onStartFailure(errorCode);
             }
         };
 
-        advertiser.startAdvertising(settings, data, advertisingCallback);
+        advertiser.startAdvertising(advertiseSettings, advertiseData, advertiseCallback);
     }
 
     @ReactMethod
@@ -98,10 +98,15 @@ public class BleModule extends ReactContextBaseJavaModule {
             return;
         }
 
-        mBluetoothGattServer.addService(new BluetoothGattService(myUUID,
-                BluetoothGattService.SERVICE_TYPE_PRIMARY));
+        BluetoothGattService gattService = new BluetoothGattService(SERVICE_UUID,
+                BluetoothGattService.SERVICE_TYPE_PRIMARY);
 
-        srvCallBack.invoke(true);
+        boolean isServAdded = mBluetoothGattServer.addService(gattService);
+
+        if (isServAdded == true) {
+            srvCallBack.invoke(true, gattService.getUuid().toString());
+            return;
+        }
     }
 
     private BluetoothGattServerCallback mGattServerCallback = new BluetoothGattServerCallback() {
@@ -117,18 +122,18 @@ public class BleModule extends ReactContextBaseJavaModule {
 
     // Custom function that we are going to export to JS
     @ReactMethod
-    public void isAdvertisingSupported(
-            Callback successCallback) {
+    public void isAdvertisingSupported(Callback successCallback) {
         if (!BluetoothAdapter.getDefaultAdapter().isMultipleAdvertisementSupported()) {
-            Toast.makeText(getReactApplicationContext(), "Multiple advertisement not supported", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getReactApplicationContext(), "Enable your bluetooth device.", Toast.LENGTH_SHORT).show();
             try {
                 successCallback.invoke(false);
             } catch (Exception e) {
-                Toast.makeText(getReactApplicationContext(), "Multiple advertisement not supported(1)", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getReactApplicationContext(), "Bluetooth Error.", Toast.LENGTH_SHORT).show();
             }
         } else {
             successCallback.invoke(true);
-            mBluetoothManager = (BluetoothManager) getReactApplicationContext().getSystemService(Context.BLUETOOTH_SERVICE);
+            mBluetoothManager = (BluetoothManager) getReactApplicationContext()
+                    .getSystemService(Context.BLUETOOTH_SERVICE);
         }
     }
 
@@ -166,6 +171,6 @@ public class BleModule extends ReactContextBaseJavaModule {
             mBluetoothGattServer.close();
             srv = true;
         }
-        advsrvCallBack.invoke(adv,srv, err);
+        advsrvCallBack.invoke(adv, srv, err);
     }
 }
