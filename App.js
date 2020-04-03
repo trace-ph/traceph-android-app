@@ -28,29 +28,41 @@ import BackgroundTimer from 'react-native-background-timer';
 
 import BleManager from 'react-native-ble-manager';
 
-const {BleModule} = NativeModules;
+const {BleModule, ToastModule} = NativeModules;
 
 const BleManagerModule = NativeModules.BleManager;
 const bleManagerEmitter = new NativeEventEmitter(BleManagerModule);
 
 const App = () => {
-  const [peripherals, setPeripherals] = useState(new Map());
   const [isAdvertising, setIsAdvertising] = useState(false);
   const [isOnGATT, setIsOnGATT] = useState(false);
   const [list, setList] = useState([]);
   const [isBleSupported, setIsBleSupported] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
   const [isOnBackground, setIsOnBackground] = useState(false);
-  const [isName, setIsName] = useState(false);
+  const [deviceName, setDeviceName] = useState('');
   const [gattUuid, setGattUuid] = useState('');
   const [advSettings, setAdvSettings] = useState('null');
+
+  const peripherals_ = new Map();
 
   var intervalRef = useRef(null);
 
   useEffect(() => {
-    BleManager.start({showAlert: false}).then(() => {
-      // Success code
-      console.log('Module initialized');
+    BleManager.start({showAlert: false});
+
+    BleManager.enableBluetooth()
+      .then(() => {
+        // Success code
+        console.log('The bluetooth is already enabled or the user confirm');
+      })
+      .catch(error => {
+        ToastModule.showToast('Error: The app needs bluetooth.');
+        console.log('The user refuse to enable bluetooth');
+      });
+
+    BleModule.getDeviceName(name => {
+      setDeviceName(name);
     });
 
     const handlerDiscover = bleManagerEmitter.addListener(
@@ -68,7 +80,7 @@ const App = () => {
         PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION,
       ).then(result => {
         if (result) {
-          console.log('Permission is OK');
+          console.log('Android Permission is OK');
         } else {
           PermissionsAndroid.request(
             PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION,
@@ -84,29 +96,22 @@ const App = () => {
     }
 
     BleModule.isAdvertisingSupported(res => {
-      console.log('isSupported?', res);
       setIsBleSupported(res);
     });
   }, []);
 
-  useEffect(() => {
-    console.log(render_map.length);
-  }, [list]);
-
-  useEffect(() => {
-    console.log(isBleSupported);
-  }, [isBleSupported]);
-
-  const toggleName = () => {
-    setIsName(curr => !curr);
+  const onNameChange = val => {
+    setDeviceName(val);
   };
 
   const startTimer = useCallback(() => {
     setIsOnBackground(true);
     intervalRef.current = BackgroundTimer.setInterval(() => {
+      if (list.length > 0) {
+        setList([]);
+      }
       startScan();
     }, 5000);
-    console.log(typeof timeoutId);
   }, []);
 
   const stopTimer = useCallback(() => {
@@ -116,8 +121,7 @@ const App = () => {
 
   const startAdvertising = () => {
     if (isBleSupported) {
-      BleModule.advertise(isName, (res, err) => {
-        console.log('ads status', res, err);
+      BleModule.advertise(deviceName, (res, err) => {
         if (res) {
           setIsAdvertising(true);
           setAdvSettings(err);
@@ -129,7 +133,6 @@ const App = () => {
   const startServer = () => {
     if (isBleSupported) {
       BleModule.startServer((res, err) => {
-        console.log('serv status', res, err);
         if (res) {
           setIsOnGATT(true);
           setGattUuid(err);
@@ -140,45 +143,53 @@ const App = () => {
 
   const stopAdvertising = () => {
     BleModule.stopBroadcastingGATT((res, res1, err) => {
-      console.log('stop advertisement?', res, res1, err);
       if (res) setIsAdvertising(false);
     });
   };
 
   const startScan = () => {
-    if (list.length > 0) {
-      let peripherals_temp = peripherals.clear();
-      setPeripherals(peripherals_temp);
-      setList([]);
-    }
-
     setIsScanning(true);
     BleManager.scan([], 3, true).then(results => {
-      console.log('Scanning...');
+      console.log('Start scan');
     });
   };
 
   const handleStopScan = () => {
-    console.log('Scan done.');
     setIsScanning(false);
-    let list_temp = Array.from(peripherals.values());
+    let list_temp = Array.from(peripherals_.values());
     setList(list_temp);
+
+    console.log(
+      'Scan done. Peripherals: ',
+      peripherals_.keys(),
+      ' temp list: ',
+      list_temp.length,
+      ' list: ',
+      list.length,
+    );
+
+    list_temp = [];
+    peripherals_.clear();
+    console.log('cleared list temp', list_temp);
+    BleManager.getDiscoveredPeripherals([]).then(peripheralsArray => {
+      // Success code
+      console.log(
+        'Discovered peripherals: ' + JSON.stringify(peripheralsArray),
+      );
+    });
   };
 
   const handleDiscoverPeripheral = peripheral => {
-    console.log('got signal', peripheral.id);
-    let peripherals_temp = peripherals;
+    console.log('discovered peripheral ', peripheral.id);
     if (!peripheral.name) {
       peripheral.name = 'NO NAME';
     }
 
-    peripherals_temp.set(peripheral.id, peripheral);
-    setPeripherals(peripherals_temp);
+    peripherals_.set(peripheral.id, peripheral);
   };
 
   const PeripheralListItem = props => {
     const {item = {advertising: {}}} = props;
-    console.log(item);
     return (
       <React.Fragment>
         <WhiteSpace size="lg" />
@@ -215,28 +226,15 @@ const App = () => {
       <StatusBar barStyle="light-content" />
       <SafeAreaView>
         <WhiteSpace size="lg" />
-        <WingBlank size="sm">
+        <WingBlank size="lg">
           {!isAdvertising ? (
             <React.Fragment>
-              {!isName ? (
-                <Button
-                  onPress={() => {
-                    toggleName();
-                  }}
-                  style={{borderRadius: 30}}
-                  type="primary">
-                  Include Name in advertisement
-                </Button>
-              ) : (
-                <Button
-                  onPress={() => {
-                    toggleName();
-                  }}
-                  style={{borderRadius: 30}}
-                  type="warning">
-                  Exclude Name in advertisement
-                </Button>
-              )}
+              <Text>Set device name</Text>
+              <TextareaItem
+                maxLength={28}
+                value={deviceName}
+                onChange={val => onNameChange(val)}
+              />
               <WhiteSpace size="lg" />
               <Button
                 onPress={() => startAdvertising()}
@@ -273,7 +271,7 @@ const App = () => {
           )}
         </WingBlank>
         <WhiteSpace size="lg" />
-        <WingBlank size="sm">
+        <WingBlank size="lg">
           {!isOnBackground ? (
             <Button
               onPress={() => {

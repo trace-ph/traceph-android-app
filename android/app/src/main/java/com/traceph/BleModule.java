@@ -48,7 +48,13 @@ public class BleModule extends ReactContextBaseJavaModule {
     private static UUID SERVICE_UUID = UUID.fromString("0000ff01-0000-1000-8000-00805F9B34FB");
 
     @ReactMethod
-    private void advertise(boolean includeName, Callback advCallBack) {
+    private void getDeviceName(Callback getNameCallBack) {
+        String currentDeviceName = BluetoothAdapter.getDefaultAdapter().getName();
+        getNameCallBack.invoke(currentDeviceName);
+    }
+
+    @ReactMethod
+    private void advertise(String deviceName, Callback advCallBack) {
         BluetoothAdapter bluetoothAdapter = mBluetoothManager.getAdapter();
         advertiser = bluetoothAdapter.getBluetoothLeAdvertiser();
         if (advertiser == null) {
@@ -56,26 +62,28 @@ public class BleModule extends ReactContextBaseJavaModule {
             return;
         }
 
+        BluetoothAdapter.getDefaultAdapter().setName(deviceName);
+
         AdvertiseSettings advertiseSettings = new AdvertiseSettings.Builder()
                 .setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_BALANCED)
-                .setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_HIGH)
-                .setConnectable(false).build();
+                .setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_HIGH).setConnectable(false).build();
 
         byte[] serviceData = "tPH".getBytes(Charset.forName("UTF-8"));
 
-        AdvertiseData advertiseData = new AdvertiseData.Builder()
-        .setIncludeDeviceName(includeName)
-                .addServiceUuid(new ParcelUuid(SERVICE_UUID))
-                .addServiceData(new ParcelUuid(SERVICE_UUID), serviceData)
+        AdvertiseData advertiseData = new AdvertiseData.Builder().setIncludeDeviceName(false)
+                .addServiceUuid(new ParcelUuid(SERVICE_UUID)).addServiceData(new ParcelUuid(SERVICE_UUID), serviceData)
                 .setIncludeTxPowerLevel(true).build();
+
+        AdvertiseData scanResponseData = new AdvertiseData.Builder().setIncludeDeviceName(true).build();
 
         AdvertiseCallback advertiseCallback = new AdvertiseCallback() {
             @Override
             public void onStartSuccess(AdvertiseSettings settingsInEffect) {
                 super.onStartSuccess(settingsInEffect);
-                // String advString = settingsInEffect.toString() +"\n Service Data \n" + advertiseData.getServiceData().toString()
+                // String advString = settingsInEffect.toString() +"\n Service Data \n" +
+                // advertiseData.getServiceData().toString()
                 // +"\n UUIDs: \n" + advertiseData.getServiceUuids().toString();
-                String advString = settingsInEffect.toString() +"\n Advertised Data \n" + advertiseData.toString();
+                String advString = settingsInEffect.toString() + "\n Advertised Data \n" + advertiseData.toString();
                 advCallBack.invoke(true, advString);
             }
 
@@ -87,7 +95,7 @@ public class BleModule extends ReactContextBaseJavaModule {
             }
         };
 
-        advertiser.startAdvertising(advertiseSettings, advertiseData, advertiseCallback);
+        advertiser.startAdvertising(advertiseSettings, advertiseData, scanResponseData, advertiseCallback);
     }
 
     @ReactMethod
@@ -124,7 +132,7 @@ public class BleModule extends ReactContextBaseJavaModule {
     @ReactMethod
     public void isAdvertisingSupported(Callback successCallback) {
         if (!BluetoothAdapter.getDefaultAdapter().isMultipleAdvertisementSupported()) {
-            Toast.makeText(getReactApplicationContext(), "Enable your bluetooth device.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getReactApplicationContext(), "Turn on bluetooth.", Toast.LENGTH_SHORT).show();
             try {
                 successCallback.invoke(false);
             } catch (Exception e) {
