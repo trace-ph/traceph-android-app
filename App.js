@@ -27,6 +27,7 @@ import {
 import BackgroundTimer from 'react-native-background-timer';
 import AsyncStorage from '@react-native-community/async-storage';
 import BleManager from 'react-native-ble-manager';
+import GetLocation from 'react-native-get-location';
 
 var Buffer = require('buffer/').Buffer;
 
@@ -91,12 +92,14 @@ const App = () => {
         PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION,
       ).then(result => {
         if (result) {
+          getLocation();
           console.log('Android Permission is OK');
         } else {
           PermissionsAndroid.request(
             PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION,
           ).then(result => {
             if (result) {
+              getLocation();
               console.log('User accept');
             } else {
               console.log('User refuse');
@@ -116,6 +119,20 @@ const App = () => {
   const onNameChange = val => {
     setDeviceName(val);
   };
+
+  const getLocation = () => {
+    GetLocation.getCurrentPosition({
+      enableHighAccuracy: true,
+      timeout: 15000,
+    })
+      .then(location => {
+        console.log(location);
+      })
+      .catch(error => {
+        const {code, message} = error;
+        console.warn(code, message);
+      });
+  }
 
   const startTimer = useCallback(() => {
     setIsOnBackground(true);
