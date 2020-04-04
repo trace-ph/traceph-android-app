@@ -25,13 +25,17 @@ import {
 } from '@ant-design/react-native';
 
 import BackgroundTimer from 'react-native-background-timer';
-
+import AsyncStorage from '@react-native-community/async-storage';
 import BleManager from 'react-native-ble-manager';
+
+var Buffer = require('buffer/').Buffer;
 
 const {BleModule, ToastModule} = NativeModules;
 
 const BleManagerModule = NativeModules.BleManager;
 const bleManagerEmitter = new NativeEventEmitter(BleManagerModule);
+
+const bleModuleEmitter = new NativeEventEmitter(BleModule);
 
 const App = () => {
   const [isAdvertising, setIsAdvertising] = useState(false);
@@ -45,6 +49,8 @@ const App = () => {
   const [advSettings, setAdvSettings] = useState('null');
 
   const peripherals_ = new Map();
+  const peripherals_history = new Map();
+  var temp_peripheralId = '';
 
   var intervalRef = useRef(null);
 
@@ -75,6 +81,11 @@ const App = () => {
       handleStopScan,
     );
 
+    const debuggingHandler = bleModuleEmitter.addListener(
+      'forConsoleLogging',
+      handleConsoleLog,
+    );
+
     if (Platform.OS === 'android' && Platform.Version >= 23) {
       PermissionsAndroid.check(
         PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION,
@@ -99,6 +110,8 @@ const App = () => {
       setIsBleSupported(res);
     });
   }, []);
+
+  useEffect(() => {}, [list]);
 
   const onNameChange = val => {
     setDeviceName(val);
@@ -149,7 +162,9 @@ const App = () => {
 
   const startScan = () => {
     setIsScanning(true);
-    BleManager.scan([], 3, true).then(results => {
+    BleManager.scan([], 3, true, {
+      matchMode: 1,
+    }).then(results => {
       console.log('Start scan');
     });
   };
@@ -168,24 +183,73 @@ const App = () => {
       list.length,
     );
 
+    if (list_temp.length > 0) {
+      console.log('connecting to ', list_temp[0].id);
+      temp_peripheralId = list_temp[0].id;
+      BleManager.connect(list_temp[0].id)
+        .then(() => {
+          console.log('Connected to ', list_temp[0].id);
+        })
+        .catch(error => {
+          console.log(error);
+        });
+      console.log('retrieving services from ', list_temp[0].id);
+      BleManager.retrieveServices(list_temp[0].id)
+        .then(() => {
+          ToastModule.showToast(`Reading peripheral: ${temp_peripheralId}`);
+          console.log('Reading peripheral: ', temp_peripheralId);
+          BleManager.read(
+            temp_peripheralId,
+            '0000ff01-0000-1000-8000-00805F9B34FB',
+            '0000ff01-0000-1000-8000-00805F9B34FB',
+          )
+            .then(readData => {
+              var buffer = Buffer.from(readData);
+              const sensorData = buffer.toString();
+              ToastModule.showToast(
+                `Service Characteristic Value: ${sensorData}`,
+              );
+              console.log('Raw Value: ' + readData);
+              console.log('Service Value: ' + sensorData);
+            })
+            .catch(error => {
+              ToastModule.showToast(`Characteristic ${error}`);
+              console.log(error);
+            });
+        })
+        .catch(error => {
+          console.log('serv: ', error);
+        });
+    }
+
     list_temp = [];
     peripherals_.clear();
     console.log('cleared list temp', list_temp);
-    BleManager.getDiscoveredPeripherals([]).then(peripheralsArray => {
-      // Success code
-      console.log(
-        'Discovered peripherals: ' + JSON.stringify(peripheralsArray),
-      );
-    });
   };
 
   const handleDiscoverPeripheral = peripheral => {
-    console.log('discovered peripheral ', peripheral.id);
+    let date = new Date().getDate(); //Current Date
+    let month = new Date().getMonth() + 1; //Current Month
+    let year = new Date().getFullYear(); //Current Year
+    let hours = new Date().getHours(); //Current Hours
+    let min = new Date().getMinutes(); //Current Minutes
+    let sec = new Date().getSeconds(); //Current Seconds
+    let timeStamp =
+      date + '/' + month + '/' + year + '-' + hours + ':' + min + ':' + sec;
+    console.log(
+      'discovered peripheral ',
+      peripheral.id,
+      date + '/' + month + '/' + year + ' ' + hours + ':' + min + ':' + sec,
+    );
     if (!peripheral.name) {
       peripheral.name = 'NO NAME';
     }
 
     peripherals_.set(peripheral.id, peripheral);
+  };
+
+  const handleConsoleLog = msg => {
+    console.log('from native: ', 'msg');
   };
 
   const PeripheralListItem = props => {

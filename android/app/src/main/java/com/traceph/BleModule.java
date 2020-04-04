@@ -4,6 +4,11 @@ import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.Callback;
+import com.facebook.react.bridge.ReactContext;
+
+import com.facebook.react.modules.core.DeviceEventManagerModule;
+import com.facebook.react.bridge.WritableMap;
+import com.facebook.react.bridge.Arguments;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -45,16 +50,22 @@ public class BleModule extends ReactContextBaseJavaModule {
     private BluetoothManager mBluetoothManager;
     private BluetoothGattServer mBluetoothGattServer;
 
+    private ReactApplicationContext reactContext;
+
     private static UUID SERVICE_UUID = UUID.fromString("0000ff01-0000-1000-8000-00805F9B34FB");
 
+    private void sendEvent(ReactContext reactContext, String eventName, WritableMap params) {
+        reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class).emit(eventName, params);
+    }
+
     @ReactMethod
-    private void getDeviceName(Callback getNameCallBack) {
+    public void getDeviceName(Callback getNameCallBack) {
         String currentDeviceName = BluetoothAdapter.getDefaultAdapter().getName();
         getNameCallBack.invoke(currentDeviceName);
     }
 
     @ReactMethod
-    private void advertise(String deviceName, Callback advCallBack) {
+    public void advertise(String deviceName, Callback advCallBack) {
         BluetoothAdapter bluetoothAdapter = mBluetoothManager.getAdapter();
         advertiser = bluetoothAdapter.getBluetoothLeAdvertiser();
         if (advertiser == null) {
@@ -66,15 +77,16 @@ public class BleModule extends ReactContextBaseJavaModule {
 
         AdvertiseSettings advertiseSettings = new AdvertiseSettings.Builder()
                 .setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_BALANCED)
-                .setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_HIGH).setConnectable(false).build();
+                .setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_HIGH).setConnectable(true).build();
 
         byte[] serviceData = "tPH".getBytes(Charset.forName("UTF-8"));
 
-        AdvertiseData advertiseData = new AdvertiseData.Builder().setIncludeDeviceName(false)
+        AdvertiseData advertiseData = new AdvertiseData.Builder().setIncludeDeviceName(true)
                 .addServiceUuid(new ParcelUuid(SERVICE_UUID)).addServiceData(new ParcelUuid(SERVICE_UUID), serviceData)
                 .setIncludeTxPowerLevel(true).build();
 
-        AdvertiseData scanResponseData = new AdvertiseData.Builder().setIncludeDeviceName(true).build();
+        // AdvertiseData scanResponseData = new
+        // AdvertiseData.Builder().setIncludeDeviceName(true).build();
 
         AdvertiseCallback advertiseCallback = new AdvertiseCallback() {
             @Override
@@ -95,11 +107,13 @@ public class BleModule extends ReactContextBaseJavaModule {
             }
         };
 
-        advertiser.startAdvertising(advertiseSettings, advertiseData, scanResponseData, advertiseCallback);
+        advertiser.startAdvertising(advertiseSettings, advertiseData, advertiseCallback);
+        // advertiser.startAdvertising(advertiseSettings, advertiseData,
+        // scanResponseData, advertiseCallback);
     }
 
     @ReactMethod
-    private void startServer(Callback srvCallBack) {
+    public void startServer(Callback srvCallBack) {
         mBluetoothGattServer = mBluetoothManager.openGattServer(getReactApplicationContext(), mGattServerCallback);
         if (mBluetoothGattServer == null) {
             srvCallBack.invoke(false);
@@ -108,6 +122,16 @@ public class BleModule extends ReactContextBaseJavaModule {
 
         BluetoothGattService gattService = new BluetoothGattService(SERVICE_UUID,
                 BluetoothGattService.SERVICE_TYPE_PRIMARY);
+
+        BluetoothGattCharacteristic mCharacteristics = new BluetoothGattCharacteristic(SERVICE_UUID, 2, 1);
+
+        String currentDeviceName = BluetoothAdapter.getDefaultAdapter().getName();
+
+        boolean isCharAdded = gattService.addCharacteristic(mCharacteristics);
+
+        if (isCharAdded == false) {
+            Toast.makeText(getReactApplicationContext(), "Can't add characteristics.", Toast.LENGTH_SHORT).show();
+        }
 
         boolean isServAdded = mBluetoothGattServer.addService(gattService);
 
@@ -118,14 +142,32 @@ public class BleModule extends ReactContextBaseJavaModule {
     }
 
     private BluetoothGattServerCallback mGattServerCallback = new BluetoothGattServerCallback() {
+        WritableMap params = Arguments.createMap();
+
         @Override
         public void onConnectionStateChange(BluetoothDevice device, int status, int newState) {
+
             if (newState == BluetoothProfile.STATE_CONNECTED) {
+                params.putString("msg", "device connected " + device.toString());
                 return;
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
+                params.putString("msg", "device disconnected " + device.toString());
                 return;
             }
+            sendEvent(reactContext, "forConsoleLogging", params);
         }
+
+        @Override
+        public void onCharacteristicReadRequest(BluetoothDevice device, int requestId, int offset,
+                BluetoothGattCharacteristic characteristic) {
+            super.onCharacteristicReadRequest(device, requestId, offset, characteristic);
+            String val = "Heyyo";
+            byte[] val_in_bytes = val.getBytes(Charset.forName("UTF-8"));
+            mBluetoothGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, val_in_bytes);
+
+            params.putString("msg", "read request response sent to  " + device.toString());
+            sendEvent(reactContext, "forConsoleLogging", params);
+        };
     };
 
     // Custom function that we are going to export to JS
