@@ -14,7 +14,8 @@ import {
   ScrollView,
   Image,
   Linking,
-  Dimensions
+  Dimensions,
+  Clipboard,
 } from 'react-native';
 
 import {
@@ -164,6 +165,11 @@ const App = () => {
     } else {
       console.log('Not supported.');
     }
+  };
+
+  const copyToClipboard = () => {
+    Clipboard.setString('https://endcov.ph/');
+    ToastModule.showToast('Copied to Clipboard');
   };
 
   const startServer = () => {
@@ -334,14 +340,12 @@ const App = () => {
                 textAlign: 'center',
                 marginBottom: 18,
               }}
-              onPress={() =>
-                Linking.openURL('www.traceph.com/samplelinkfordownload')
-              }>
-              www.traceph.com/samplelinkfordownload
+              onPress={() => Linking.openURL('https://endcov.ph/')}>
+              https://endcov.ph/
             </Text>
             <Button
               onPress={() => {
-                startServer();
+                copyToClipboard();
               }}
               style={{
                 borderRadius: 30,
@@ -359,8 +363,8 @@ const App = () => {
               source={qrImg}
               style={{
                 textAlign: 'center',
-                width: Dimensions.get('window').width * .9,
-                height: Dimensions.get('window').width * .9,
+                width: Dimensions.get('window').width * 0.9,
+                height: Dimensions.get('window').width * 0.9,
                 marginTop: 20,
               }}
             />
