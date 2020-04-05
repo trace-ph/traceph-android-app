@@ -1,4 +1,8 @@
 import React, {useEffect, useState, useRef, useCallback} from 'react';
+
+import {NavigationContainer} from '@react-navigation/native';
+import {createStackNavigator} from '@react-navigation/stack';
+
 import {
   StyleSheet,
   StatusBar,
@@ -18,6 +22,8 @@ import {
   Clipboard,
 } from 'react-native';
 
+import {SvgUri} from 'react-native-svg';
+
 import {
   ActivityIndicator,
   Button,
@@ -31,7 +37,13 @@ import {
 import BackgroundTimer from 'react-native-background-timer';
 import AsyncStorage from '@react-native-community/async-storage';
 import BleManager from 'react-native-ble-manager';
+import VIForegroundService from '@voximplant/react-native-foreground-service';
+
+import SharingScreen from './screens/sharingScreen';
+
 import GetLocation from 'react-native-get-location';
+
+const Stack = createStackNavigator();
 
 var Buffer = require('buffer/').Buffer;
 
@@ -49,40 +61,44 @@ const App = () => {
   const [isBleSupported, setIsBleSupported] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
   const [isOnBackground, setIsOnBackground] = useState(false);
-  const [deviceName, setDeviceName] = useState('');
+  const [deviceName, setDeviceName] = useState('Handshake');
   const [gattUuid, setGattUuid] = useState('');
   const [advSettings, setAdvSettings] = useState('null');
 
-  const headerImg = require('./assets/header.png');
-  const qrImg = require('./assets/qr.png');
+  const [discoveredDevices, setDiscoveredDevices] = useState([]);
+  const [discoveryLog, setDiscoveryLog] = useState([]);
+
   const peripherals_ = new Map();
   const peripherals_history = new Map();
-  var temp_peripheralId = '';
+
   var intervalRef = useRef(null);
 
+  const discoveredDevicesRef = useRef();
+  const discoveryLogRef = useRef();
+
   useEffect(() => {
+    //Starts BLEManager
     BleManager.start({showAlert: false});
 
+    //Enables Bluetooth
     BleManager.enableBluetooth()
       .then(() => {
-        // Success code
+        BleModule.isAdvertisingSupported(res => {
+          setIsBleSupported(res);
+        });
         console.log('The bluetooth is already enabled or the user confirm');
       })
-      .catch((error) => {
+      .catch(error => {
         ToastModule.showToast('Error: The app needs bluetooth.');
         console.log('The user refuse to enable bluetooth');
       });
-
-    BleModule.getDeviceName((name) => {
-      setDeviceName(name);
-    });
 
     const handlerDiscover = bleManagerEmitter.addListener(
       'BleManagerDiscoverPeripheral',
       handleDiscoverPeripheral,
     );
 
-    const handlerStop = bleManagerEmitter.addListener(
+    const handlerStopScan = bleManagerEmitter.addListener(
       'BleManagerStopScan',
       handleStopScan,
     );
@@ -95,14 +111,14 @@ const App = () => {
     if (Platform.OS === 'android' && Platform.Version >= 23) {
       PermissionsAndroid.check(
         PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION,
-      ).then((result) => {
+      ).then(result => {
         if (result) {
           getLocation();
           console.log('Android Permission is OK');
         } else {
           PermissionsAndroid.request(
             PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION,
-          ).then((result) => {
+          ).then(result => {
             if (result) {
               getLocation();
               console.log('User accept');
@@ -113,16 +129,53 @@ const App = () => {
         }
       });
     }
-
-    BleModule.isAdvertisingSupported((res) => {
-      setIsBleSupported(res);
-    });
   }, []);
 
-  useEffect(() => {}, [list]);
+  useEffect(() => {
+    discoveryLogRef.current = discoveryLog;
+  }, [discoveryLog]);
 
-  const onNameChange = (val) => {
-    setDeviceName(val);
+  useEffect(() => {
+    //console.log('this is the list', list);
+  }, [list]);
+
+  useEffect(() => {
+    discoveredDevicesRef.current = discoveredDevices;
+    //find value in array with no serviceData
+    //connect
+  }, [discoveredDevices]);
+
+  const startForegroundService = async () => {
+    if (Platform.Version >= 26) {
+      const channelConfig = {
+        id: 'TracePHServiceChannel',
+        name: 'TracePH Channel',
+        description: 'Notification Channel for TracePH',
+        enableVibration: false,
+        importance: 2,
+      };
+      await VIForegroundService.createNotificationChannel(channelConfig);
+    }
+
+    const notificationConfig = {
+      id: 9811385,
+      title: 'TracePH Active',
+      text: 'The app is running in the background.',
+      icon: 'ic_launcher_round',
+    };
+    if (Platform.Version >= 26) {
+      notificationConfig.channelId = 'TracePHServiceChannel';
+    }
+    try {
+      await VIForegroundService.startService(notificationConfig);
+      console.log('service good.');
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const stopForegroundService = () => {
+    VIForegroundService.stopService();
   };
 
   const getLocation = () => {
@@ -130,10 +183,10 @@ const App = () => {
       enableHighAccuracy: true,
       timeout: 15000,
     })
-      .then((location) => {
+      .then(location => {
         console.log(location);
       })
-      .catch((error) => {
+      .catch(error => {
         const {code, message} = error;
         console.warn(code, message);
       });
@@ -141,7 +194,72 @@ const App = () => {
 
   const startTimer = useCallback(() => {
     setIsOnBackground(true);
-    intervalRef.current = BackgroundTimer.setInterval(() => {
+    intervalRef.current = BackgroundTimer.setInterval(async () => {
+      console.log('on Timer discover prevVal', discoveredDevicesRef.current);
+
+      const checkData = item => {
+        return item.data === '';
+      };
+
+      const deviceToConnect = discoveredDevicesRef.current.filter(checkData);
+
+      for (let i = 0; i < deviceToConnect.length; i++) {
+        let isConnected = false;
+        var id = deviceToConnect[i].id;
+        console.log('connecting to device ', id);
+        await BleManager.connect(id)
+          .then(() => {
+            console.log('Connected to ', id);
+            isConnected = true;
+          })
+          .then(() => {
+            return BleManager.retrieveServices(id);
+          })
+          .then(info => {
+            console.log('Retrieved services of peripheral: ', id, info);
+          })
+          .then(() => {
+            console.log('reading data from ', id);
+            BleManager.read(
+              id,
+              '0000ff01-0000-1000-8000-00805F9B34FB',
+              '0000ff01-0000-1000-8000-00805F9B34FB',
+            )
+              .then(readData => {
+                var buffer = Buffer.from(readData);
+                const serviceData = buffer.toString();
+                console.log('received service data ', serviceData);
+              })
+              .catch(err => {
+                console.log('read error', err);
+              })
+              .finally(() => {
+                if (isConnected) {
+                  BleManager.disconnect(id, true)
+                    .then(() => {
+                      isConnected = false;
+                    })
+                    .catch(err => {
+                      console.log('disconnect error', err);
+                    });
+                }
+              });
+          })
+          .catch(error => {
+            console.log('getting Service Data failed: ', error);
+            if (isConnected) {
+              BleManager.disconnect(id, true)
+                .then(() => {
+                  isConnected = false;
+                })
+                .catch(err => {
+                  console.log('disconnect error', err);
+                });
+            }
+          });
+      }
+      console.log('end of interval');
+
       if (list.length > 0) {
         setList([]);
       }
@@ -162,9 +280,7 @@ const App = () => {
           setAdvSettings(err);
         }
       });
-    } else {
-      console.log('Not supported.');
-    }
+    } else console.log('Not supported.');
   };
 
   const copyToClipboard = () => {
@@ -180,16 +296,12 @@ const App = () => {
           setGattUuid(err);
         }
       });
-    } else {
-      console.log('Not supported.');
-    }
+    } else console.log('Not supported.');
   };
 
   const stopAdvertising = () => {
     BleModule.stopBroadcastingGATT((res, res1, err) => {
-      if (res) {
-        setIsAdvertising(false);
-      }
+      if (res) setIsAdvertising(false);
     });
   };
 
@@ -197,7 +309,8 @@ const App = () => {
     setIsScanning(true);
     BleManager.scan([], 3, true, {
       matchMode: 1,
-    }).then((results) => {
+      numberOfMatches: 1,
+    }).then(results => {
       console.log('Start scan');
     });
   };
@@ -207,60 +320,14 @@ const App = () => {
     let list_temp = Array.from(peripherals_.values());
     setList(list_temp);
 
-    console.log(
-      'Scan done. Peripherals: ',
-      peripherals_.keys(),
-      ' temp list: ',
-      list_temp.length,
-      ' list: ',
-      list.length,
-    );
-
-    if (list_temp.length > 0) {
-      console.log('connecting to ', list_temp[0].id);
-      temp_peripheralId = list_temp[0].id;
-      BleManager.connect(list_temp[0].id)
-        .then(() => {
-          console.log('Connected to ', list_temp[0].id);
-        })
-        .catch((error) => {
-          console.log(error);
-        });
-      console.log('retrieving services from ', list_temp[0].id);
-      BleManager.retrieveServices(list_temp[0].id)
-        .then(() => {
-          ToastModule.showToast(`Reading peripheral: ${temp_peripheralId}`);
-          console.log('Reading peripheral: ', temp_peripheralId);
-          BleManager.read(
-            temp_peripheralId,
-            '0000ff01-0000-1000-8000-00805F9B34FB',
-            '0000ff01-0000-1000-8000-00805F9B34FB',
-          )
-            .then((readData) => {
-              var buffer = Buffer.from(readData);
-              const sensorData = buffer.toString();
-              ToastModule.showToast(
-                `Service Characteristic Value: ${sensorData}`,
-              );
-              console.log('Raw Value: ' + readData);
-              console.log('Service Value: ' + sensorData);
-            })
-            .catch((error) => {
-              ToastModule.showToast(`Characteristic ${error}`);
-              console.log(error);
-            });
-        })
-        .catch((error) => {
-          console.log('serv: ', error);
-        });
-    }
+    console.log('Scan done.');
 
     list_temp = [];
     peripherals_.clear();
-    console.log('cleared list temp', list_temp);
   };
 
-  const handleDiscoverPeripheral = (peripheral) => {
+  const handleDiscoverPeripheral = peripheral => {
+    var serviceData = '';
     let date = new Date().getDate(); //Current Date
     let month = new Date().getMonth() + 1; //Current Month
     let year = new Date().getFullYear(); //Current Year
@@ -268,24 +335,66 @@ const App = () => {
     let min = new Date().getMinutes(); //Current Minutes
     let sec = new Date().getSeconds(); //Current Seconds
     let timeStamp =
-      date + '/' + month + '/' + year + '-' + hours + ':' + min + ':' + sec;
-    console.log(
-      'discovered peripheral ',
-      peripheral.id,
-      date + '/' + month + '/' + year + ' ' + hours + ':' + min + ':' + sec,
-    );
-    if (!peripheral.name) {
-      peripheral.name = 'NO NAME';
-    }
+      date + '/' + month + '/' + year + ' ' + hours + ':' + min + ':' + sec;
 
+    //temporary; to be removed
     peripherals_.set(peripheral.id, peripheral);
+    let logLength = discoveryLogRef.current.length;
+    if (
+      logLength === 0 ||
+      discoveryLogRef.current[discoveryLogRef.current.length - 1].id !==
+        peripheral.id ||
+      discoveryLogRef.current[discoveryLogRef.current.length - 1].time !==
+        timeStamp
+    ) {
+      setDiscoveryLog(currArr => {
+        let temp_currArr = [...currArr];
+        temp_currArr.push({
+          id: peripheral.id,
+          data: serviceData,
+          txPower: peripheral.advertising.txPowerLevel,
+          rssi: peripheral.rssi,
+          time: timeStamp,
+        });
+        console.log(peripheral.id, serviceData, timeStamp);
+        return temp_currArr;
+      });
+
+      setDiscoveredDevices(currentArr => {
+        let temp_currentArr = [...currentArr];
+
+        const checkIfIdExist = item => {
+          return item.id === peripheral.id;
+        };
+
+        if (temp_currentArr.findIndex(checkIfIdExist) === -1) {
+          //get the advertisement data
+          if (peripheral.advertising.serviceData.hasOwnProperty('ff01')) {
+            var buffer = Buffer.from(
+              peripheral.advertising.serviceData.ff01.bytes,
+            );
+            serviceData = buffer.toString();
+          }
+
+          temp_currentArr.push({
+            id: peripheral.id,
+            data: serviceData,
+            txPower: peripheral.advertising.txPowerLevel,
+            rssi: peripheral.rssi,
+            time: timeStamp,
+          });
+        }
+
+        return temp_currentArr;
+      });
+    }
   };
 
-  const handleConsoleLog = (msg) => {
+  const handleConsoleLog = msg => {
     console.log('from native: ', 'msg');
   };
 
-  const PeripheralListItem = (props) => {
+  const PeripheralListItem = props => {
     const {item = {advertising: {}}} = props;
     return (
       <React.Fragment>
@@ -319,163 +428,15 @@ const App = () => {
   });
 
   return (
-    <ScrollView>
-      <StatusBar barStyle="light-content" />
-      <SafeAreaView>
-        <WhiteSpace size="lg" />
-        <WingBlank size="lg" styles={styles.baseText}>
-          <>
-            <Image source={headerImg} style={{width: '100%', marginTop: 20}} />
-            <Text style={styles.headerText}>We want you to be informed.</Text>
-            <Text style={styles.desc}>
-              Let this app run in the background. Whenever we confirmed that
-              someone you have encountered has been tested positive for
-              COVID-19, we will give you a notification.
-            </Text>
-            <Text style={styles.desc}>You may also share through:</Text>
-            <Text
-              style={{
-                color: 'blue',
-                fontSize: 18,
-                textAlign: 'center',
-                marginBottom: 18,
-              }}
-              onPress={() => Linking.openURL('https://endcov.ph/')}>
-              https://endcov.ph/
-            </Text>
-            <Button
-              onPress={() => {
-                copyToClipboard();
-              }}
-              style={{
-                borderRadius: 30,
-                backgroundColor: 'red',
-                marginBottom: 30,
-              }}
-              type="primary">
-              Copy Link to Share
-            </Button>
-            <Text style={styles.desc}>
-              or you can let your friends or family scan the QR code below
-            </Text>
-
-            <Image
-              source={qrImg}
-              style={{
-                textAlign: 'center',
-                width: Dimensions.get('window').width * 0.9,
-                height: Dimensions.get('window').width * 0.9,
-                marginTop: 20,
-              }}
-            />
-          </>
-          {/* {!isAdvertising ? (
-            <React.Fragment>
-              <WhiteSpace size="lg" />
-              <Button
-                onPress={() => startAdvertising()}
-                style={{borderRadius: 30}}
-                type="primary">
-                Start Advertising
-              </Button>
-            </React.Fragment>
-          ) : (
-            <TextareaItem
-              value={`Advertisement running. \n ${advSettings}`}
-              editable={false}
-              autoHeight
-              style={{paddingVertical: 5}}
-            />
-          )} */}
-        </WingBlank>
-        <WhiteSpace size="lg" />
-        <WingBlank size="lg">
-          {/* {!isOnGATT ? (
-            <Button
-              onPress={() => {
-                startServer();
-              }}
-              style={{borderRadius: 30}}
-              type="primary">
-              Start GATT Server
-            </Button>
-          ) : (
-            <React.Fragment>
-              <Text>GATT Server running.</Text>
-              <Text>UUID: {gattUuid}</Text>
-            </React.Fragment>
-          )} */}
-        </WingBlank>
-        <WhiteSpace size="lg" />
-        <WingBlank size="lg">
-          {/* {!isOnBackground ? (
-            <Button
-              onPress={() => {
-                startTimer();
-                startScan();
-              }}
-              style={{borderRadius: 30}}
-              type="primary">
-              Start Scan
-            </Button>
-          ) : (
-            <Button
-              onPress={() => {
-                stopTimer();
-              }}
-              style={{borderRadius: 30}}
-              type="warning">
-              Stop Scan
-            </Button>
-          )} */}
-        </WingBlank>
-        <WhiteSpace size="lg" />
-        <WhiteSpace size="md" />
-        {/* <WingBlank size="lg">
-          <Flex direction="column">
-            {isScanning ? (
-              <React.Fragment>
-                <ActivityIndicator size="large" />
-                <Text>Scanning Devices</Text>
-              </React.Fragment>
-            ) : (
-              <Text># of devices detected: {list.length}</Text>
-            )}
-          </Flex>
-        </WingBlank> */}
-        <FlatList
-          data={list}
-          renderItem={({item}) => <PeripheralListItem item={item} />}
-        />
-      </SafeAreaView>
-    </ScrollView>
+    <>
+      <NavigationContainer>
+        <Stack.Navigator initialRouteName="Home" headerMode="none">
+          <Stack.Screen name="Home" component={SharingScreen} />
+          <Stack.Screen name="Sharing" component={SharingScreen} />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </>
   );
 };
-
-const styles = StyleSheet.create({
-  defaultFontSize: {
-    fontSize: 22,
-  },
-  headerText: {
-    textAlign: 'center',
-    width: '100%',
-    fontSize: 22,
-    marginTop: 23,
-    marginBottom: 12,
-    fontWeight: 'bold',
-  },
-  desc: {
-    textAlign: 'center',
-    width: '100%',
-    fontSize: 22,
-    marginBottom: 23,
-    fontWeight: '100',
-    lineHeight: 50,
-    fontWeight: '100',
-  },
-  baseText: {
-    fontFamily: 'Roboto',
-  },
-});
 
 export default App;
