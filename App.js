@@ -12,6 +12,9 @@ import {
   Text,
   FlatList,
   ScrollView,
+  Image,
+  Linking,
+  Dimensions
 } from 'react-native';
 
 import {
@@ -49,10 +52,11 @@ const App = () => {
   const [gattUuid, setGattUuid] = useState('');
   const [advSettings, setAdvSettings] = useState('null');
 
+  const headerImg = require('./assets/header.png');
+  const qrImg = require('./assets/qr.png');
   const peripherals_ = new Map();
   const peripherals_history = new Map();
   var temp_peripheralId = '';
-
   var intervalRef = useRef(null);
 
   useEffect(() => {
@@ -63,12 +67,12 @@ const App = () => {
         // Success code
         console.log('The bluetooth is already enabled or the user confirm');
       })
-      .catch(error => {
+      .catch((error) => {
         ToastModule.showToast('Error: The app needs bluetooth.');
         console.log('The user refuse to enable bluetooth');
       });
 
-    BleModule.getDeviceName(name => {
+    BleModule.getDeviceName((name) => {
       setDeviceName(name);
     });
 
@@ -90,14 +94,14 @@ const App = () => {
     if (Platform.OS === 'android' && Platform.Version >= 23) {
       PermissionsAndroid.check(
         PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION,
-      ).then(result => {
+      ).then((result) => {
         if (result) {
           getLocation();
           console.log('Android Permission is OK');
         } else {
           PermissionsAndroid.request(
             PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION,
-          ).then(result => {
+          ).then((result) => {
             if (result) {
               getLocation();
               console.log('User accept');
@@ -109,14 +113,14 @@ const App = () => {
       });
     }
 
-    BleModule.isAdvertisingSupported(res => {
+    BleModule.isAdvertisingSupported((res) => {
       setIsBleSupported(res);
     });
   }, []);
 
   useEffect(() => {}, [list]);
 
-  const onNameChange = val => {
+  const onNameChange = (val) => {
     setDeviceName(val);
   };
 
@@ -125,14 +129,14 @@ const App = () => {
       enableHighAccuracy: true,
       timeout: 15000,
     })
-      .then(location => {
+      .then((location) => {
         console.log(location);
       })
-      .catch(error => {
+      .catch((error) => {
         const {code, message} = error;
         console.warn(code, message);
       });
-  }
+  };
 
   const startTimer = useCallback(() => {
     setIsOnBackground(true);
@@ -157,7 +161,9 @@ const App = () => {
           setAdvSettings(err);
         }
       });
-    } else console.log('Not supported.');
+    } else {
+      console.log('Not supported.');
+    }
   };
 
   const startServer = () => {
@@ -168,12 +174,16 @@ const App = () => {
           setGattUuid(err);
         }
       });
-    } else console.log('Not supported.');
+    } else {
+      console.log('Not supported.');
+    }
   };
 
   const stopAdvertising = () => {
     BleModule.stopBroadcastingGATT((res, res1, err) => {
-      if (res) setIsAdvertising(false);
+      if (res) {
+        setIsAdvertising(false);
+      }
     });
   };
 
@@ -181,7 +191,7 @@ const App = () => {
     setIsScanning(true);
     BleManager.scan([], 3, true, {
       matchMode: 1,
-    }).then(results => {
+    }).then((results) => {
       console.log('Start scan');
     });
   };
@@ -207,7 +217,7 @@ const App = () => {
         .then(() => {
           console.log('Connected to ', list_temp[0].id);
         })
-        .catch(error => {
+        .catch((error) => {
           console.log(error);
         });
       console.log('retrieving services from ', list_temp[0].id);
@@ -220,7 +230,7 @@ const App = () => {
             '0000ff01-0000-1000-8000-00805F9B34FB',
             '0000ff01-0000-1000-8000-00805F9B34FB',
           )
-            .then(readData => {
+            .then((readData) => {
               var buffer = Buffer.from(readData);
               const sensorData = buffer.toString();
               ToastModule.showToast(
@@ -229,12 +239,12 @@ const App = () => {
               console.log('Raw Value: ' + readData);
               console.log('Service Value: ' + sensorData);
             })
-            .catch(error => {
+            .catch((error) => {
               ToastModule.showToast(`Characteristic ${error}`);
               console.log(error);
             });
         })
-        .catch(error => {
+        .catch((error) => {
           console.log('serv: ', error);
         });
     }
@@ -244,7 +254,7 @@ const App = () => {
     console.log('cleared list temp', list_temp);
   };
 
-  const handleDiscoverPeripheral = peripheral => {
+  const handleDiscoverPeripheral = (peripheral) => {
     let date = new Date().getDate(); //Current Date
     let month = new Date().getMonth() + 1; //Current Month
     let year = new Date().getFullYear(); //Current Year
@@ -265,11 +275,11 @@ const App = () => {
     peripherals_.set(peripheral.id, peripheral);
   };
 
-  const handleConsoleLog = msg => {
+  const handleConsoleLog = (msg) => {
     console.log('from native: ', 'msg');
   };
 
-  const PeripheralListItem = props => {
+  const PeripheralListItem = (props) => {
     const {item = {advertising: {}}} = props;
     return (
       <React.Fragment>
@@ -303,19 +313,60 @@ const App = () => {
   });
 
   return (
-    <>
+    <ScrollView>
       <StatusBar barStyle="light-content" />
       <SafeAreaView>
         <WhiteSpace size="lg" />
-        <WingBlank size="lg">
-          {!isAdvertising ? (
+        <WingBlank size="lg" styles={styles.baseText}>
+          <>
+            <Image source={headerImg} style={{width: '100%', marginTop: 20}} />
+            <Text style={styles.headerText}>We want you to be informed.</Text>
+            <Text style={styles.desc}>
+              Let this app run in the background. Whenever we confirmed that
+              someone you have encountered has been tested positive for
+              COVID-19, we will give you a notification.
+            </Text>
+            <Text style={styles.desc}>You may also share through:</Text>
+            <Text
+              style={{
+                color: 'blue',
+                fontSize: 18,
+                textAlign: 'center',
+                marginBottom: 18,
+              }}
+              onPress={() =>
+                Linking.openURL('www.traceph.com/samplelinkfordownload')
+              }>
+              www.traceph.com/samplelinkfordownload
+            </Text>
+            <Button
+              onPress={() => {
+                startServer();
+              }}
+              style={{
+                borderRadius: 30,
+                backgroundColor: 'red',
+                marginBottom: 30,
+              }}
+              type="primary">
+              Copy Link to Share
+            </Button>
+            <Text style={styles.desc}>
+              or you can let your friends or family scan the QR code below
+            </Text>
+
+            <Image
+              source={qrImg}
+              style={{
+                textAlign: 'center',
+                width: Dimensions.get('window').width * .9,
+                height: Dimensions.get('window').width * .9,
+                marginTop: 20,
+              }}
+            />
+          </>
+          {/* {!isAdvertising ? (
             <React.Fragment>
-              <Text>Set device name</Text>
-              <TextareaItem
-                maxLength={28}
-                value={deviceName}
-                onChange={val => onNameChange(val)}
-              />
               <WhiteSpace size="lg" />
               <Button
                 onPress={() => startAdvertising()}
@@ -331,11 +382,11 @@ const App = () => {
               autoHeight
               style={{paddingVertical: 5}}
             />
-          )}
+          )} */}
         </WingBlank>
         <WhiteSpace size="lg" />
         <WingBlank size="lg">
-          {!isOnGATT ? (
+          {/* {!isOnGATT ? (
             <Button
               onPress={() => {
                 startServer();
@@ -349,11 +400,11 @@ const App = () => {
               <Text>GATT Server running.</Text>
               <Text>UUID: {gattUuid}</Text>
             </React.Fragment>
-          )}
+          )} */}
         </WingBlank>
         <WhiteSpace size="lg" />
         <WingBlank size="lg">
-          {!isOnBackground ? (
+          {/* {!isOnBackground ? (
             <Button
               onPress={() => {
                 startTimer();
@@ -372,11 +423,11 @@ const App = () => {
               type="warning">
               Stop Scan
             </Button>
-          )}
+          )} */}
         </WingBlank>
         <WhiteSpace size="lg" />
         <WhiteSpace size="md" />
-        <WingBlank size="lg">
+        {/* <WingBlank size="lg">
           <Flex direction="column">
             {isScanning ? (
               <React.Fragment>
@@ -387,16 +438,40 @@ const App = () => {
               <Text># of devices detected: {list.length}</Text>
             )}
           </Flex>
-        </WingBlank>
+        </WingBlank> */}
         <FlatList
           data={list}
           renderItem={({item}) => <PeripheralListItem item={item} />}
         />
       </SafeAreaView>
-    </>
+    </ScrollView>
   );
 };
 
-const styles = StyleSheet.create({});
+const styles = StyleSheet.create({
+  defaultFontSize: {
+    fontSize: 22,
+  },
+  headerText: {
+    textAlign: 'center',
+    width: '100%',
+    fontSize: 22,
+    marginTop: 23,
+    marginBottom: 12,
+    fontWeight: 'bold',
+  },
+  desc: {
+    textAlign: 'center',
+    width: '100%',
+    fontSize: 22,
+    marginBottom: 23,
+    fontWeight: '100',
+    lineHeight: 50,
+    fontWeight: '100',
+  },
+  baseText: {
+    fontFamily: 'Roboto',
+  },
+});
 
 export default App;
