@@ -72,21 +72,17 @@ public class BleModule extends ReactContextBaseJavaModule {
             Toast.makeText(getReactApplicationContext(), "Failed to create advertiser", Toast.LENGTH_SHORT).show();
             return;
         }
-
-        BluetoothAdapter.getDefaultAdapter().setName(deviceName);
-
         AdvertiseSettings advertiseSettings = new AdvertiseSettings.Builder()
                 .setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_BALANCED)
                 .setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_HIGH).setConnectable(true).build();
 
-        byte[] serviceData = "tPH".getBytes(Charset.forName("UTF-8"));
+        byte[] serviceData = deviceName.getBytes(Charset.forName("UTF-8"));
 
-        AdvertiseData advertiseData = new AdvertiseData.Builder().setIncludeDeviceName(true)
+        AdvertiseData advertiseData = new AdvertiseData.Builder().setIncludeDeviceName(false)
                 .addServiceUuid(new ParcelUuid(SERVICE_UUID)).addServiceData(new ParcelUuid(SERVICE_UUID), serviceData)
                 .setIncludeTxPowerLevel(true).build();
 
-        // AdvertiseData scanResponseData = new
-        // AdvertiseData.Builder().setIncludeDeviceName(true).build();
+        AdvertiseData scanResponseData = new AdvertiseData.Builder().setIncludeDeviceName(true).build();
 
         AdvertiseCallback advertiseCallback = new AdvertiseCallback() {
             @Override
@@ -107,9 +103,9 @@ public class BleModule extends ReactContextBaseJavaModule {
             }
         };
 
-        advertiser.startAdvertising(advertiseSettings, advertiseData, advertiseCallback);
         // advertiser.startAdvertising(advertiseSettings, advertiseData,
-        // scanResponseData, advertiseCallback);
+        // advertiseCallback);
+        advertiser.startAdvertising(advertiseSettings, advertiseData, scanResponseData, advertiseCallback);
     }
 
     @ReactMethod
