@@ -1,38 +1,20 @@
-import React, {useEffect, useState, useRef, useCallback} from 'react';
+import React, {
+  useEffect,
+  useState,
+  useRef,
+  useCallback,
+  useContext,
+} from 'react';
 
 import {NavigationContainer} from '@react-navigation/native';
 import {createStackNavigator} from '@react-navigation/stack';
 
 import {
-  StyleSheet,
-  StatusBar,
   NativeEventEmitter,
   NativeModules,
   PermissionsAndroid,
-  AppState,
   Platform,
-  SafeAreaView,
-  View,
-  Text,
-  FlatList,
-  ScrollView,
-  Image,
-  Linking,
-  Dimensions,
-  Clipboard,
 } from 'react-native';
-
-import {SvgUri} from 'react-native-svg';
-
-import {
-  ActivityIndicator,
-  Button,
-  Card,
-  Flex,
-  WhiteSpace,
-  WingBlank,
-  TextareaItem,
-} from '@ant-design/react-native';
 
 import BackgroundTimer from 'react-native-background-timer';
 import AsyncStorage from '@react-native-community/async-storage';
@@ -40,6 +22,10 @@ import BleManager from 'react-native-ble-manager';
 import VIForegroundService from '@voximplant/react-native-foreground-service';
 
 import SharingScreen from './screens/sharingScreen';
+import GreetingScreen from './screens/greetingScreen';
+import AskBluScreen from './screens/askForBluetoothScreen';
+
+import FxContext from './FxContext';
 
 import GetLocation from 'react-native-get-location';
 
@@ -55,43 +41,24 @@ const bleManagerEmitter = new NativeEventEmitter(BleManagerModule);
 const bleModuleEmitter = new NativeEventEmitter(BleModule);
 
 const App = () => {
-  const [isAdvertising, setIsAdvertising] = useState(false);
-  const [isOnGATT, setIsOnGATT] = useState(false);
-  const [list, setList] = useState([]);
   const [isBleSupported, setIsBleSupported] = useState(false);
-  const [isScanning, setIsScanning] = useState(false);
   const [isOnBackground, setIsOnBackground] = useState(false);
-  const [deviceName, setDeviceName] = useState('Handshake');
-  const [gattUuid, setGattUuid] = useState('');
-  const [advSettings, setAdvSettings] = useState('null');
 
-  const [discoveredDevices, setDiscoveredDevices] = useState([]);
+  const [currentDiscoveredDevices, setCurrentDiscoveredDevices] = useState([]);
   const [discoveryLog, setDiscoveryLog] = useState([]);
-
-  const peripherals_ = new Map();
-  const peripherals_history = new Map();
+  const [recognizedDevices, setRecognizedDevices] = useState([]);
 
   var intervalRef = useRef(null);
 
-  const discoveredDevicesRef = useRef();
+  const currentDiscoveredDevicesRef = useRef();
   const discoveryLogRef = useRef();
+  const isBleSupportedRef = useRef();
+  const recognizedDevicesRef = useRef();
+  const {mFunc, setMFunc} = useContext(FxContext);
 
   useEffect(() => {
     //Starts BLEManager
     BleManager.start({showAlert: false});
-
-    //Enables Bluetooth
-    BleManager.enableBluetooth()
-      .then(() => {
-        BleModule.isAdvertisingSupported(res => {
-          setIsBleSupported(res);
-        });
-        console.log('The bluetooth is already enabled or the user confirm');
-      })
-      .catch(error => {
-        ToastModule.showToast('Error: The app needs bluetooth.');
-        console.log('The user refuse to enable bluetooth');
-      });
 
     const handlerDiscover = bleManagerEmitter.addListener(
       'BleManagerDiscoverPeripheral',
@@ -108,27 +75,7 @@ const App = () => {
       handleConsoleLog,
     );
 
-    if (Platform.OS === 'android' && Platform.Version >= 23) {
-      PermissionsAndroid.check(
-        PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION,
-      ).then(result => {
-        if (result) {
-          getLocation();
-          console.log('Android Permission is OK');
-        } else {
-          PermissionsAndroid.request(
-            PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION,
-          ).then(result => {
-            if (result) {
-              getLocation();
-              console.log('User accept');
-            } else {
-              console.log('User refuse');
-            }
-          });
-        }
-      });
-    }
+    setMFunc({enableBluetooth, startMonitoring, stopMonitoring});
   }, []);
 
   useEffect(() => {
@@ -136,14 +83,60 @@ const App = () => {
   }, [discoveryLog]);
 
   useEffect(() => {
-    //console.log('this is the list', list);
-  }, [list]);
+    currentDiscoveredDevicesRef.current = currentDiscoveredDevices;
+    console.log('current Discovered Devices', currentDiscoveredDevices);
+  }, [currentDiscoveredDevices]);
 
   useEffect(() => {
-    discoveredDevicesRef.current = discoveredDevices;
-    //find value in array with no serviceData
-    //connect
-  }, [discoveredDevices]);
+    isBleSupportedRef.current = isBleSupported;
+  }, [isBleSupported]);
+
+  useEffect(() => {
+    recognizedDevicesRef.current = recognizedDevices;
+  }, [recognizedDevices]);
+
+  const enableBluetooth = useCallback(
+    () =>
+      new Promise((resolve, reject) => {
+        if (Platform.OS === 'android' && Platform.Version >= 23) {
+          PermissionsAndroid.check(
+            PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION,
+          ).then(result => {
+            if (result) {
+              getLocation();
+              console.log('Android Permission is OK');
+            } else {
+              PermissionsAndroid.request(
+                PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION,
+              ).then(result => {
+                if (result) {
+                  getLocation();
+                  console.log('User accept');
+                } else {
+                  console.log('User refuse');
+                  reject();
+                }
+              });
+            }
+          });
+        }
+        //Enables Bluetooth
+        BleManager.enableBluetooth()
+          .then(() => {
+            BleModule.isAdvertisingSupported(res => {
+              setIsBleSupported(res);
+            });
+            console.log('The bluetooth is already enabled or the user confirm');
+            setTimeout(() => resolve(), 1000);
+          })
+          .catch(error => {
+            ToastModule.showToast("Can't operate without bluetooth.");
+            console.log('The user refuse to enable bluetooth');
+            reject();
+          });
+      }),
+    [],
+  );
 
   const startForegroundService = async () => {
     if (Platform.Version >= 26) {
@@ -174,9 +167,28 @@ const App = () => {
     }
   };
 
-  const stopForegroundService = () => {
-    VIForegroundService.stopService();
+  const stopForegroundService = async () => {
+    let returnVal = false;
+    await VIForegroundService.stopService()
+      .then(() => {
+        returnVal = true;
+      })
+      .catch(() => {
+        returnVal = false;
+      });
+    return returnVal;
   };
+
+  const stopMonitoring = useCallback(
+    () =>
+      new Promise((resolve, reject) => {
+        stopAdvertising();
+        stopTimer();
+        if (stopForegroundService()) resolve();
+        else reject();
+      }),
+    [],
+  );
 
   const getLocation = () => {
     GetLocation.getCurrentPosition({
@@ -192,48 +204,84 @@ const App = () => {
       });
   };
 
-  const startTimer = useCallback(() => {
-    setIsOnBackground(true);
-    intervalRef.current = BackgroundTimer.setInterval(async () => {
-      console.log('on Timer discover prevVal', discoveredDevicesRef.current);
+  const startTimer = useCallback(
+    () =>
+      new Promise((resolve, reject) => {
+        setIsOnBackground(true);
+        intervalRef.current = BackgroundTimer.setInterval(async () => {
+          const deviceToConnect = [];
+          const temp_recognizedDevices = [...recognizedDevicesRef.current];
+          console.log('recognizedDevices', temp_recognizedDevices);
 
-      const checkData = item => {
-        return item.data === '';
-      };
+          const segregateList = item =>
+            new Promise(resolve => {
+              if (item.data === '') {
+                deviceToConnect.push(item);
+              } else if (item.data === 'Handshake') {
+                temp_recognizedDevices.push(item);
+              }
 
-      const deviceToConnect = discoveredDevicesRef.current.filter(checkData);
+              resolve();
+            });
 
-      for (let i = 0; i < deviceToConnect.length; i++) {
-        let isConnected = false;
-        var id = deviceToConnect[i].id;
-        console.log('connecting to device ', id);
-        await BleManager.connect(id)
-          .then(() => {
-            console.log('Connected to ', id);
-            isConnected = true;
-          })
-          .then(() => {
-            return BleManager.retrieveServices(id);
-          })
-          .then(info => {
-            console.log('Retrieved services of peripheral: ', id, info);
-          })
-          .then(() => {
-            console.log('reading data from ', id);
-            BleManager.read(
-              id,
-              '0000ff01-0000-1000-8000-00805F9B34FB',
-              '0000ff01-0000-1000-8000-00805F9B34FB',
-            )
-              .then(readData => {
-                var buffer = Buffer.from(readData);
-                const serviceData = buffer.toString();
-                console.log('received service data ', serviceData);
+          currentDiscoveredDevicesRef.current.forEach(async item => {
+            function checkIfRecognized(obj) {
+              return obj.id === item.id;
+            }
+            let isRecognized = temp_recognizedDevices.some(checkIfRecognized);
+            console.log(item.id, 'is recognized', isRecognized);
+            if (!isRecognized) {
+              await segregateList(item);
+            }
+          });
+
+          for (let i = 0; i < deviceToConnect.length; i++) {
+            let isConnected = false;
+            var id = deviceToConnect[i].id;
+            console.log('connecting to device ', id);
+            await BleManager.connect(id)
+              .then(() => {
+                console.log('Connected to ', id);
+                isConnected = true;
               })
-              .catch(err => {
-                console.log('read error', err);
+              .then(() => {
+                return BleManager.retrieveServices(id);
               })
-              .finally(() => {
+              .then(info => {
+                console.log('Retrieved services of peripheral: ', id, info);
+              })
+              .then(() => {
+                console.log('reading data from ', id);
+                BleManager.read(
+                  id,
+                  '0000ff01-0000-1000-8000-00805F9B34FB',
+                  '0000ff01-0000-1000-8000-00805F9B34FB',
+                )
+                  .then(readData => {
+                    var buffer = Buffer.from(readData);
+                    const serviceData = buffer.toString();
+                    //set the serviceData to data
+                    deviceToConnect[i].data = serviceData;
+                    temp_recognizedDevices.push(deviceToConnect[i]);
+                    console.log('received service data ', serviceData);
+                  })
+                  .catch(err => {
+                    console.log('read error', err);
+                  })
+                  .finally(() => {
+                    if (isConnected) {
+                      BleManager.disconnect(id, true)
+                        .then(() => {
+                          isConnected = false;
+                        })
+                        .catch(err => {
+                          console.log('disconnect error', err);
+                        });
+                    }
+                  });
+              })
+              .catch(error => {
+                console.log('getting Service Data failed: ', error);
                 if (isConnected) {
                   BleManager.disconnect(id, true)
                     .then(() => {
@@ -244,86 +292,80 @@ const App = () => {
                     });
                 }
               });
-          })
-          .catch(error => {
-            console.log('getting Service Data failed: ', error);
-            if (isConnected) {
-              BleManager.disconnect(id, true)
-                .then(() => {
-                  isConnected = false;
-                })
-                .catch(err => {
-                  console.log('disconnect error', err);
-                });
-            }
-          });
-      }
-      console.log('end of interval');
+          }
+          setRecognizedDevices(temp_recognizedDevices);
+          setCurrentDiscoveredDevices([]);
+          startScan(false);
+        }, 7000);
 
-      if (list.length > 0) {
-        setList([]);
-      }
-      startScan();
-    }, 5000);
-  }, []);
+        if (intervalRef.current) {
+          console.log('timer started');
+          resolve();
+        } else {
+          reject();
+        }
+      }),
+    [],
+  );
 
   const stopTimer = useCallback(() => {
     setIsOnBackground(false);
     BackgroundTimer.clearInterval(intervalRef.current);
   }, []);
 
-  const startAdvertising = () => {
-    if (isBleSupported) {
-      BleModule.advertise(deviceName, (res, err) => {
-        if (res) {
-          setIsAdvertising(true);
-          setAdvSettings(err);
-        }
-      });
-    } else console.log('Not supported.');
-  };
+  const startAdvertising = () =>
+    new Promise((resolve, reject) => {
+      if (isBleSupportedRef.current) {
+        BleModule.advertise('', (res, err) => {
+          if (res) {
+            console.log('advertising');
+            resolve();
+          }
+        });
+      } else {
+        reject();
+      }
+    });
 
-  const copyToClipboard = () => {
-    Clipboard.setString('https://endcov.ph/');
-    ToastModule.showToast('Copied to Clipboard');
-  };
-
-  const startServer = () => {
-    if (isBleSupported) {
-      BleModule.startServer((res, err) => {
-        if (res) {
-          setIsOnGATT(true);
-          setGattUuid(err);
-        }
-      });
-    } else console.log('Not supported.');
-  };
+  const startServer = () =>
+    new Promise((resolve, reject) => {
+      if (isBleSupportedRef.current) {
+        BleModule.startServer((res, err) => {
+          if (res) {
+            console.log('gatt started');
+            resolve();
+          }
+        });
+      } else {
+        reject();
+      }
+    });
 
   const stopAdvertising = () => {
     BleModule.stopBroadcastingGATT((res, res1, err) => {
-      if (res) setIsAdvertising(false);
+      // if (res) setIsAdvertising(false);
     });
   };
 
-  const startScan = () => {
-    setIsScanning(true);
-    BleManager.scan([], 3, true, {
-      matchMode: 1,
-      numberOfMatches: 1,
-    }).then(results => {
-      console.log('Start scan');
+  const startScan = isUseUuid =>
+    new Promise((resolve, reject) => {
+      let scanUuids = [];
+      if (isUseUuid) scanUuids = ['0000ff01-0000-1000-8000-00805F9B34FB'];
+      BleManager.scan(scanUuids, 3, true, {
+        matchMode: 1,
+        numberOfMatches: 1,
+      })
+        .then(results => {
+          console.log('Start scan');
+          resolve();
+        })
+        .catch(() => {
+          reject();
+        });
     });
-  };
 
   const handleStopScan = () => {
-    setIsScanning(false);
-    let list_temp = Array.from(peripherals_.values());
-    setList(list_temp);
-
     console.log('Scan done.');
-
-    list_temp = [];
-    peripherals_.clear();
   };
 
   const handleDiscoverPeripheral = peripheral => {
@@ -337,22 +379,20 @@ const App = () => {
     let timeStamp =
       date + '/' + month + '/' + year + ' ' + hours + ':' + min + ':' + sec;
 
-    //temporary; to be removed
-    peripherals_.set(peripheral.id, peripheral);
+    function checkIfExistInLog(obj) {
+      return obj.id === peripheral.id && obj.time === timeStamp;
+    }
+
     let logLength = discoveryLogRef.current.length;
-    if (
-      logLength === 0 ||
-      discoveryLogRef.current[discoveryLogRef.current.length - 1].id !==
-        peripheral.id ||
-      discoveryLogRef.current[discoveryLogRef.current.length - 1].time !==
-        timeStamp
-    ) {
+    let isPeripheralExisting = discoveryLogRef.current.some(checkIfExistInLog);
+
+    if (logLength === 0 || !isPeripheralExisting) {
+      //log only records the device id, rssi, and time;
+      //the identity(data) will be referenced from discoveredDevices
       setDiscoveryLog(currArr => {
         let temp_currArr = [...currArr];
         temp_currArr.push({
           id: peripheral.id,
-          data: serviceData,
-          txPower: peripheral.advertising.txPowerLevel,
           rssi: peripheral.rssi,
           time: timeStamp,
         });
@@ -360,7 +400,7 @@ const App = () => {
         return temp_currArr;
       });
 
-      setDiscoveredDevices(currentArr => {
+      setCurrentDiscoveredDevices(currentArr => {
         let temp_currentArr = [...currentArr];
 
         const checkIfIdExist = item => {
@@ -380,8 +420,6 @@ const App = () => {
             id: peripheral.id,
             data: serviceData,
             txPower: peripheral.advertising.txPowerLevel,
-            rssi: peripheral.rssi,
-            time: timeStamp,
           });
         }
 
@@ -390,48 +428,34 @@ const App = () => {
     }
   };
 
+  const startMonitoring = useCallback(
+    () =>
+      new Promise(async (resolve, reject) => {
+        startAdvertising()
+          .then(() => startServer())
+          .then(() => startTimer())
+          .then(() => startScan())
+          .then(() => startForegroundService())
+          .then(() => {
+            resolve();
+          })
+          .catch(() => {
+            reject();
+          });
+      }),
+    [],
+  );
+
   const handleConsoleLog = msg => {
     console.log('from native: ', 'msg');
   };
 
-  const PeripheralListItem = props => {
-    const {item = {advertising: {}}} = props;
-    return (
-      <React.Fragment>
-        <WhiteSpace size="lg" />
-        <WingBlank size="lg">
-          <Card>
-            <Card.Header title={item.name} />
-            <Card.Body>
-              <View style={{minHeight: 50}}>
-                <Text style={{marginLeft: 16}}>id: {item.id}</Text>
-                <Text style={{marginLeft: 16}}>
-                  UUIDs: {item.advertising.serviceUUIDs}
-                </Text>
-                <Text style={{marginLeft: 16}}>
-                  TX Power Lvl: {item.advertising.txPowerLevel}
-                </Text>
-                <Text style={{marginLeft: 16}}>RSSI: {item.rssi}</Text>
-                <Text style={{marginLeft: 16}}>
-                  Data: {item.advertising.data}
-                </Text>
-              </View>
-            </Card.Body>
-          </Card>
-        </WingBlank>
-      </React.Fragment>
-    );
-  };
-
-  let render_map = list.map((listItem, index) => {
-    return <PeripheralListItem item={listItem} id={index} />;
-  });
-
   return (
     <>
       <NavigationContainer>
-        <Stack.Navigator initialRouteName="Home" headerMode="none">
-          <Stack.Screen name="Home" component={SharingScreen} />
+        <Stack.Navigator initialRouteName="Greet" headerMode="none">
+          <Stack.Screen name="Greet" component={GreetingScreen} />
+          <Stack.Screen name="askForBluetooth" component={AskBluScreen} />
           <Stack.Screen name="Sharing" component={SharingScreen} />
         </Stack.Navigator>
       </NavigationContainer>

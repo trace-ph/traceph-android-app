@@ -76,7 +76,9 @@ public class BleModule extends ReactContextBaseJavaModule {
                 .setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_BALANCED)
                 .setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_HIGH).setConnectable(true).build();
 
-        byte[] serviceData = deviceName.getBytes(Charset.forName("UTF-8"));
+        String serviceDataString = "Handshake";
+
+        byte[] serviceData = serviceDataString.getBytes(Charset.forName("UTF-8"));
 
         AdvertiseData advertiseData = new AdvertiseData.Builder().setIncludeDeviceName(false)
                 .addServiceUuid(new ParcelUuid(SERVICE_UUID)).addServiceData(new ParcelUuid(SERVICE_UUID), serviceData)
@@ -157,7 +159,7 @@ public class BleModule extends ReactContextBaseJavaModule {
         public void onCharacteristicReadRequest(BluetoothDevice device, int requestId, int offset,
                 BluetoothGattCharacteristic characteristic) {
             super.onCharacteristicReadRequest(device, requestId, offset, characteristic);
-            String val = "Heyyo";
+            String val = "Handshake";
             byte[] val_in_bytes = val.getBytes(Charset.forName("UTF-8"));
             mBluetoothGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, val_in_bytes);
 

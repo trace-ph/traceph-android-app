@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect, useContext, useState} from 'react';
 import {
   StyleSheet,
   StatusBar,
@@ -8,19 +8,50 @@ import {
   Image,
   Linking,
   Dimensions,
+  Clipboard,
+  NativeModules,
 } from 'react-native';
 
+const {ToastModule} = NativeModules;
+
 import {Button, Flex, WhiteSpace, WingBlank} from '@ant-design/react-native';
+
+import FxContext from '../FxContext';
 
 import Header from '../assets/header.svg';
 const qrImg = require('../assets/qr.png');
 
+const copyToClipboard = () => {
+  Clipboard.setString('https://endcov.ph/');
+  ToastModule.showToast('Copied to Clipboard');
+};
+
 export default function SharingScreen({navigation}) {
+  const {mFunc, setMFunc} = useContext(FxContext);
+  const [isMonitoring, setIsMonitoring] = useState(true);
+  useEffect(() => {
+    mFunc
+      .startMonitoring()
+      .then(() => {
+        console.log('monitoring started');
+        ToastModule.showToast('Contact Tracing is initiated.');
+        setIsMonitoring(true);
+      })
+      .catch(() => {
+        ToastModule.showToast(
+          'Can`t start Contact Tracing. Please restart the app.',
+        );
+        mFunc.stopMonitoring().catch(() => {
+          console.log('error starting and stopping monitoring');
+        });
+      });
+  }, []);
+
   return (
     <>
       <React.Fragment>
-        <StatusBar barStyle="light-content" />
-        <ScrollView>
+        <StatusBar barStyle="dark-content" backgroundColor="white" />
+        <ScrollView style={{backgroundColor: '#FFFFFF'}}>
           <WingBlank size="lg">
             <Flex direction="column" align="center" style={{marginTop: '10%'}}>
               <Header width={'100%'} />
@@ -71,11 +102,51 @@ export default function SharingScreen({navigation}) {
               <Image
                 source={qrImg}
                 style={{
-                  width: Dimensions.get('window').width * 0.9,
-                  height: Dimensions.get('window').width * 0.9,
+                  width: 250,
+                  height: 250,
                   marginTop: 20,
                 }}
               />
+              <WhiteSpace size="lg" />
+              <WhiteSpace size="lg" />
+              {isMonitoring ? (
+                <Button
+                  activeStyle={false}
+                  onPress={() => {
+                    mFunc.stopMonitoring().then(() => {
+                      setIsMonitoring(false);
+                      ToastModule.showToast(
+                        'Monitoring stopped. Enable to allow contact tracing.',
+                      );
+                    });
+                  }}>
+                  Disable Contact Tracing
+                </Button>
+              ) : (
+                <Button
+                  activeStyle={false}
+                  onPress={() => {
+                    mFunc
+                      .startMonitoring()
+                      .then(() => {
+                        console.log('monitoring started');
+                        ToastModule.showToast('Contact Tracing is initiated.');
+                        setIsMonitoring(true);
+                      })
+                      .catch(() => {
+                        ToastModule.showToast(
+                          'Can`t start Contact Tracing. Please restart the app.',
+                        );
+                        mFunc.stopMonitoring().catch(() => {
+                          console.log('error starting and stopping monitoring');
+                        });
+                      });
+                  }}>
+                  Enable Contact Tracing
+                </Button>
+              )}
+              <WhiteSpace size="lg" />
+              <WhiteSpace size="lg" />
             </Flex>
           </WingBlank>
         </ScrollView>
