@@ -17,9 +17,10 @@ import {
 } from 'react-native';
 
 import BackgroundTimer from 'react-native-background-timer';
-import AsyncStorage from '@react-native-community/async-storage';
 import BleManager from 'react-native-ble-manager';
 import VIForegroundService from '@voximplant/react-native-foreground-service';
+import GetLocation from 'react-native-get-location';
+import MMKV from 'react-native-mmkv-storage';
 
 import SharingScreen from './screens/sharingScreen';
 import GreetingScreen from './screens/greetingScreen';
@@ -27,7 +28,8 @@ import AskBluScreen from './screens/askForBluetoothScreen';
 
 import FxContext from './FxContext';
 
-import GetLocation from 'react-native-get-location';
+import {getNode, insertNode} from './apis/node';
+import {insertContacts} from './apis/contact';
 
 const Stack = createStackNavigator();
 
@@ -43,7 +45,6 @@ const bleModuleEmitter = new NativeEventEmitter(BleModule);
 const App = () => {
   const [isBleSupported, setIsBleSupported] = useState(false);
   const [isOnBackground, setIsOnBackground] = useState(false);
-
   const [currentDiscoveredDevices, setCurrentDiscoveredDevices] = useState([]);
   const [discoveryLog, setDiscoveryLog] = useState([]);
   const [recognizedDevices, setRecognizedDevices] = useState([]);
@@ -55,6 +56,8 @@ const App = () => {
   const isBleSupportedRef = useRef();
   const recognizedDevicesRef = useRef();
   const {mFunc, setMFunc} = useContext(FxContext);
+
+  var MmkvStore = new MMKV.Loader().withInstanceID('bleDiscoveryLogs');
 
   useEffect(() => {
     //Starts BLEManager
@@ -76,6 +79,10 @@ const App = () => {
     );
 
     setMFunc({enableBluetooth, startMonitoring, stopMonitoring});
+    registerDevice();
+    initializeLocalStore();
+
+    getLocation();
   }, []);
 
   useEffect(() => {
@@ -84,7 +91,7 @@ const App = () => {
 
   useEffect(() => {
     currentDiscoveredDevicesRef.current = currentDiscoveredDevices;
-    console.log('current Discovered Devices', currentDiscoveredDevices);
+    //console.log('current Discovered Devices', currentDiscoveredDevices);
   }, [currentDiscoveredDevices]);
 
   useEffect(() => {
@@ -95,6 +102,66 @@ const App = () => {
     recognizedDevicesRef.current = recognizedDevices;
   }, [recognizedDevices]);
 
+  const initializeLocalStore = async () => {
+    try {
+      MmkvStore = await MmkvStore.initialize();
+    } catch (err) {
+      console.log('store initialization failed. ', err);
+    }
+  };
+
+  const registerDevice = () => {
+    //get node
+    //if node exists, return
+    //else, insert node
+    var node_id = 'testAndroid';
+    var device_id = 'android id';
+    var person_id = 'debugger person';
+    // getNode({node_id, device_id, person_id})
+    //   .then(res => console.log('axios connected', res))
+    //   .catch(err => {
+    //     if (err.response) {
+    //       console.log(err.response.data);
+    //       console.log(err.response.status);
+    //       console.log(err.response.headers);
+    //     }
+    //     console.log(err);
+    //   });
+    // insertNode({node_id, device_id, person_id})
+    //   .then(res => console.log('axios connected', res))
+    //   .catch(err => {
+    //     if (err.response) {
+    //       console.log(err.response.data);
+    //       console.log(err.response.status);
+    //       console.log(err.response.headers);
+    //     }
+    //     console.log('insert', err);
+    //   });
+    // insertContacts({
+    //   contacts: [
+    //     {
+    //       type: 'direct-bluetooth',
+    //       timestamp: '2020-03-01 01:01:01',
+    //       source_node_id: 'c78775ed-2e4c-43fd-bd9c-90d203826212',
+    //       node_pairs: ['c78775ed-2e4c-43fd-bd9c-90d203826212'],
+    //       location: {
+    //         type: 'Point',
+    //         coordinates: [0],
+    //       },
+    //     },
+    //   ],
+    // })
+    //   .then(res => console.log('axios connected', res))
+    //   .catch(err => {
+    //     if (err.response) {
+    //       console.log(err.response.data);
+    //       console.log(err.response.status);
+    //       console.log(err.response.headers);
+    //     }
+    //     console.log('insert', err);
+    //   });
+  };
+
   const enableBluetooth = useCallback(
     () =>
       new Promise((resolve, reject) => {
@@ -103,14 +170,12 @@ const App = () => {
             PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION,
           ).then(result => {
             if (result) {
-              getLocation();
               console.log('Android Permission is OK');
             } else {
               PermissionsAndroid.request(
                 PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION,
               ).then(result => {
                 if (result) {
-                  getLocation();
                   console.log('User accept');
                 } else {
                   console.log('User refuse');
@@ -212,6 +277,7 @@ const App = () => {
           const deviceToConnect = [];
           const temp_recognizedDevices = [...recognizedDevicesRef.current];
           console.log('recognizedDevices', temp_recognizedDevices);
+          console.log('discovery log', discoveryLogRef.current);
 
           const segregateList = item =>
             new Promise(resolve => {
@@ -229,7 +295,7 @@ const App = () => {
               return obj.id === item.id;
             }
             let isRecognized = temp_recognizedDevices.some(checkIfRecognized);
-            console.log(item.id, 'is recognized', isRecognized);
+            //console.log(item.id, 'is recognized', isRecognized);
             if (!isRecognized) {
               await segregateList(item);
             }
@@ -238,21 +304,21 @@ const App = () => {
           for (let i = 0; i < deviceToConnect.length; i++) {
             let isConnected = false;
             var id = deviceToConnect[i].id;
-            console.log('connecting to device ', id);
+            //console.log('connecting to device ', id);
             await BleManager.connect(id)
               .then(() => {
-                console.log('Connected to ', id);
+                //console.log('Connected to ', id);
                 isConnected = true;
               })
               .then(() => {
                 return BleManager.retrieveServices(id);
               })
               .then(info => {
-                console.log('Retrieved services of peripheral: ', id, info);
+                //console.log('Retrieved services of peripheral: ', id, info);
               })
-              .then(() => {
-                console.log('reading data from ', id);
-                BleManager.read(
+              .then(async () => {
+                //console.log('reading data from ', id);
+                await BleManager.read(
                   id,
                   '0000ff01-0000-1000-8000-00805F9B34FB',
                   '0000ff01-0000-1000-8000-00805F9B34FB',
@@ -294,7 +360,34 @@ const App = () => {
               });
           }
           setRecognizedDevices(temp_recognizedDevices);
+
+          var localStorage = [];
+          try {
+            localStorage = (await MmkvStore.getArrayAsync('discLogs')) || [];
+            console.log('local storage: ', localStorage);
+          } catch (err) {
+            console.log('local storage not found', err);
+          }
+          discoveryLogRef.current.forEach(val => {
+            function checkIfOnRecognized(obj) {
+              return obj.id === val.id;
+            }
+            let recogDevIndex = temp_recognizedDevices.findIndex(
+              checkIfOnRecognized,
+            );
+            if (recogDevIndex >= 0) {
+              val.data = temp_recognizedDevices[recogDevIndex].data;
+              val.txPower = temp_recognizedDevices[recogDevIndex].txPower;
+              localStorage.push(val);
+            }
+          });
+          try {
+            await MmkvStore.setArrayAsync('discLogs', localStorage);
+          } catch (err) {
+            console.log('local storage cant update', err);
+          }
           setCurrentDiscoveredDevices([]);
+          setDiscoveryLog([]);
           startScan(false);
         }, 7000);
 
@@ -396,7 +489,7 @@ const App = () => {
           rssi: peripheral.rssi,
           time: timeStamp,
         });
-        console.log(peripheral.id, serviceData, timeStamp);
+        //console.log(peripheral.id, serviceData, timeStamp);
         return temp_currArr;
       });
 
@@ -434,7 +527,7 @@ const App = () => {
         startAdvertising()
           .then(() => startServer())
           .then(() => startTimer())
-          .then(() => startScan())
+          .then(() => startScan(false))
           .then(() => startForegroundService())
           .then(() => {
             resolve();
