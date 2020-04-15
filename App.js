@@ -21,6 +21,7 @@ import BleManager from 'react-native-ble-manager';
 import VIForegroundService from '@voximplant/react-native-foreground-service';
 import GetLocation from 'react-native-get-location';
 import MMKV from 'react-native-mmkv-storage';
+import NetInfo from '@react-native-community/netinfo';
 
 import SharingScreen from './screens/sharingScreen';
 import GreetingScreen from './screens/greetingScreen';
@@ -28,12 +29,16 @@ import AskBluScreen from './screens/askForBluetoothScreen';
 
 import FxContext from './FxContext';
 
-import {getNode, insertNode} from './apis/node';
-import {insertContacts} from './apis/contact';
+import uploadContact from './utilities/uploadContact';
+import registerDevice from './utilities/registerDevice';
+
+import {TextareaItem, WingBlank, Button} from '@ant-design/react-native';
 
 const Stack = createStackNavigator();
 
 var Buffer = require('buffer/').Buffer;
+
+var formatISO9075 = require('date-fns/formatISO9075');
 
 const {BleModule, ToastModule} = NativeModules;
 
@@ -44,17 +49,23 @@ const bleModuleEmitter = new NativeEventEmitter(BleModule);
 
 const App = () => {
   const [isBleSupported, setIsBleSupported] = useState(false);
-  const [isOnBackground, setIsOnBackground] = useState(false);
   const [currentDiscoveredDevices, setCurrentDiscoveredDevices] = useState([]);
   const [discoveryLog, setDiscoveryLog] = useState([]);
   const [recognizedDevices, setRecognizedDevices] = useState([]);
+  const [dataForDisplay, setDataForDisplay] = useState('');
+  const [location, setLocation] = useState([]);
+  const [isConnectedToNet, setIsConnectedToNet] = useState(false);
+  const [nodeId, setNodeId] = useState(null);
 
   var intervalRef = useRef(null);
-
   const currentDiscoveredDevicesRef = useRef();
   const discoveryLogRef = useRef();
   const isBleSupportedRef = useRef();
   const recognizedDevicesRef = useRef();
+  const locationRef = useRef();
+  const isConnectedToNetRef = useRef();
+  const nodeIdRef = useRef();
+
   const {mFunc, setMFunc} = useContext(FxContext);
 
   var MmkvStore = new MMKV.Loader().withInstanceID('bleDiscoveryLogs');
@@ -78,8 +89,13 @@ const App = () => {
       handleConsoleLog,
     );
 
-    setMFunc({enableBluetooth, startMonitoring, stopMonitoring});
-    registerDevice();
+    const netStatHandler = NetInfo.addEventListener(state => {
+      let netStat = state.isInternetReachable;
+      setIsConnectedToNet(netStat);
+      console.log('network state', netStat);
+    });
+
+    setMFunc({enableBluetooth, startMonitoring, stopMonitoring, getNodeId});
     initializeLocalStore();
 
     getLocation();
@@ -102,64 +118,60 @@ const App = () => {
     recognizedDevicesRef.current = recognizedDevices;
   }, [recognizedDevices]);
 
+  useEffect(() => {
+    locationRef.current = location;
+  }, [location]);
+
+  useEffect(() => {
+    isConnectedToNetRef.current = isConnectedToNet;
+  }, [isConnectedToNet]);
+
+  useEffect(() => {
+    nodeIdRef.current = nodeId;
+  }, [nodeId]);
+
+  const getNodeId = useCallback(
+    () =>
+      new Promise(async (resolve, reject) => {
+        //CHECKOUT if node_id changes at reinstall, and so display the node_id on screen
+        try {
+          let node_id = (await MmkvStore.getStringAsync('node_id')) || null;
+          setNodeId(node_id);
+          resolve();
+        } catch (err) {
+          console.log('node_id not found', err);
+          if (isConnectedToNetRef.current) {
+            registerDevice()
+              .then(async node_id => {
+                try {
+                  await MmkvStore.setStringAsync('node_id', node_id);
+                  setNodeId(node_id);
+                  resolve();
+                } catch (err) {
+                  console.log('local storage cant update', err);
+                  reject();
+                }
+              })
+              .catch(err => {
+                console.log('registering error', err);
+                ToastModule.showToast('Internet Connection Needed. Try again.');
+                reject();
+              });
+          } else {
+            ToastModule.showToast('Internet Connection Needed. Try again.');
+            reject();
+          }
+        }
+      }),
+    [],
+  );
+
   const initializeLocalStore = async () => {
     try {
       MmkvStore = await MmkvStore.initialize();
     } catch (err) {
       console.log('store initialization failed. ', err);
     }
-  };
-
-  const registerDevice = () => {
-    //get node
-    //if node exists, return
-    //else, insert node
-    var node_id = 'testAndroid';
-    var device_id = 'android id';
-    var person_id = 'debugger person';
-    // getNode({node_id, device_id, person_id})
-    //   .then(res => console.log('axios connected', res))
-    //   .catch(err => {
-    //     if (err.response) {
-    //       console.log(err.response.data);
-    //       console.log(err.response.status);
-    //       console.log(err.response.headers);
-    //     }
-    //     console.log(err);
-    //   });
-    // insertNode({node_id, device_id, person_id})
-    //   .then(res => console.log('axios connected', res))
-    //   .catch(err => {
-    //     if (err.response) {
-    //       console.log(err.response.data);
-    //       console.log(err.response.status);
-    //       console.log(err.response.headers);
-    //     }
-    //     console.log('insert', err);
-    //   });
-    // insertContacts({
-    //   contacts: [
-    //     {
-    //       type: 'direct-bluetooth',
-    //       timestamp: '2020-03-01 01:01:01',
-    //       source_node_id: 'c78775ed-2e4c-43fd-bd9c-90d203826212',
-    //       node_pairs: ['c78775ed-2e4c-43fd-bd9c-90d203826212'],
-    //       location: {
-    //         type: 'Point',
-    //         coordinates: [0],
-    //       },
-    //     },
-    //   ],
-    // })
-    //   .then(res => console.log('axios connected', res))
-    //   .catch(err => {
-    //     if (err.response) {
-    //       console.log(err.response.data);
-    //       console.log(err.response.status);
-    //       console.log(err.response.headers);
-    //     }
-    //     console.log('insert', err);
-    //   });
   };
 
   const enableBluetooth = useCallback(
@@ -206,9 +218,9 @@ const App = () => {
   const startForegroundService = async () => {
     if (Platform.Version >= 26) {
       const channelConfig = {
-        id: 'TracePHServiceChannel',
-        name: 'TracePH Channel',
-        description: 'Notification Channel for TracePH',
+        id: 'detectPHServiceChannel',
+        name: 'detectPH Channel',
+        description: 'Notification Channel for detectPH',
         enableVibration: false,
         importance: 2,
       };
@@ -217,12 +229,12 @@ const App = () => {
 
     const notificationConfig = {
       id: 9811385,
-      title: 'TracePH Active',
+      title: 'detectPH Active',
       text: 'The app is running in the background.',
       icon: 'ic_launcher_round',
     };
     if (Platform.Version >= 26) {
-      notificationConfig.channelId = 'TracePHServiceChannel';
+      notificationConfig.channelId = 'detectPHServiceChannel';
     }
     try {
       await VIForegroundService.startService(notificationConfig);
@@ -258,10 +270,12 @@ const App = () => {
   const getLocation = () => {
     GetLocation.getCurrentPosition({
       enableHighAccuracy: true,
-      timeout: 15000,
+      timeout: 5000,
     })
-      .then(location => {
-        console.log(location);
+      .then(locDeets => {
+        const {longitude, latitude, time} = locDeets;
+        let mLocation = [longitude, latitude, time];
+        setLocation(mLocation);
       })
       .catch(error => {
         const {code, message} = error;
@@ -272,7 +286,7 @@ const App = () => {
   const startTimer = useCallback(
     () =>
       new Promise((resolve, reject) => {
-        setIsOnBackground(true);
+        getLocation();
         intervalRef.current = BackgroundTimer.setInterval(async () => {
           const deviceToConnect = [];
           const temp_recognizedDevices = [...recognizedDevicesRef.current];
@@ -364,7 +378,9 @@ const App = () => {
           var localStorage = [];
           try {
             localStorage = (await MmkvStore.getArrayAsync('discLogs')) || [];
-            console.log('local storage: ', localStorage);
+            console.log('localStorage', localStorage);
+            let mtext = JSON.stringify(localStorage);
+            setDataForDisplay(mtext);
           } catch (err) {
             console.log('local storage not found', err);
           }
@@ -376,11 +392,28 @@ const App = () => {
               checkIfOnRecognized,
             );
             if (recogDevIndex >= 0) {
-              val.data = temp_recognizedDevices[recogDevIndex].data;
-              val.txPower = temp_recognizedDevices[recogDevIndex].txPower;
-              localStorage.push(val);
+              let contact = {
+                type: 'direct-bluetooth',
+                timestamp: val.time,
+                source_node_id: nodeIdRef.current,
+                node_pair: temp_recognizedDevices[recogDevIndex].data,
+                location: {type: 'Point', coordinates: locationRef.current},
+                rssi: val.rssi,
+                txPower: temp_recognizedDevices[recogDevIndex].txPower,
+              };
+              localStorage.push(contact);
             }
           });
+
+          if (isConnectedToNetRef.current && localStorage.length !== 0) {
+            await uploadContact(localStorage)
+              .then(() => {
+                localStorage = [];
+              })
+              .catch(err => {
+                console.log('upload error', err);
+              });
+          }
           try {
             await MmkvStore.setArrayAsync('discLogs', localStorage);
           } catch (err) {
@@ -388,7 +421,7 @@ const App = () => {
           }
           setCurrentDiscoveredDevices([]);
           setDiscoveryLog([]);
-          startScan(false);
+          startScan(true);
         }, 7000);
 
         if (intervalRef.current) {
@@ -402,7 +435,6 @@ const App = () => {
   );
 
   const stopTimer = useCallback(() => {
-    setIsOnBackground(false);
     BackgroundTimer.clearInterval(intervalRef.current);
   }, []);
 
@@ -444,10 +476,7 @@ const App = () => {
     new Promise((resolve, reject) => {
       let scanUuids = [];
       if (isUseUuid) scanUuids = ['0000ff01-0000-1000-8000-00805F9B34FB'];
-      BleManager.scan(scanUuids, 3, true, {
-        matchMode: 1,
-        numberOfMatches: 1,
-      })
+      BleManager.scan(scanUuids, 3, true)
         .then(results => {
           console.log('Start scan');
           resolve();
@@ -469,8 +498,8 @@ const App = () => {
     let hours = new Date().getHours(); //Current Hours
     let min = new Date().getMinutes(); //Current Minutes
     let sec = new Date().getSeconds(); //Current Seconds
-    let timeStamp =
-      date + '/' + month + '/' + year + ' ' + hours + ':' + min + ':' + sec;
+
+    let timeStamp = formatISO9075(new Date(year, month, date, hours, min, sec));
 
     function checkIfExistInLog(obj) {
       return obj.id === peripheral.id && obj.time === timeStamp;
@@ -489,7 +518,7 @@ const App = () => {
           rssi: peripheral.rssi,
           time: timeStamp,
         });
-        //console.log(peripheral.id, serviceData, timeStamp);
+        console.log(peripheral.id, serviceData, timeStamp);
         return temp_currArr;
       });
 
@@ -527,7 +556,7 @@ const App = () => {
         startAdvertising()
           .then(() => startServer())
           .then(() => startTimer())
-          .then(() => startScan(false))
+          .then(() => startScan(true))
           .then(() => startForegroundService())
           .then(() => {
             resolve();
@@ -544,7 +573,14 @@ const App = () => {
   };
 
   return (
-    <>
+    <React.Fragment>
+      <WingBlank>
+        <TextareaItem
+          rows={8}
+          placeholder="discovery logs"
+          value={dataForDisplay}
+        />
+      </WingBlank>
       <NavigationContainer>
         <Stack.Navigator initialRouteName="Greet" headerMode="none">
           <Stack.Screen name="Greet" component={GreetingScreen} />
@@ -552,7 +588,7 @@ const App = () => {
           <Stack.Screen name="Sharing" component={SharingScreen} />
         </Stack.Navigator>
       </NavigationContainer>
-    </>
+    </React.Fragment>
   );
 };
 

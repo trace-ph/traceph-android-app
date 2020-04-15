@@ -6,6 +6,8 @@ buildscript {
         minSdkVersion = 21
         compileSdkVersion = 28
         targetSdkVersion = 28
+        androidXCore = "1.0.2"
+        firebaseIidVersion = "19.0.1" //CHECKOUT if compiling error occur
     }
     repositories {
         google()

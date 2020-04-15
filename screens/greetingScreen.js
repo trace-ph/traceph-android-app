@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useContext, useState} from 'react';
 import {
   StyleSheet,
   StatusBar,
@@ -13,11 +13,15 @@ const {ToastModule} = NativeModules;
 
 import {Button, Flex, WhiteSpace, WingBlank} from '@ant-design/react-native';
 
+import FxContext from '../FxContext';
+
 import Header from '../assets/potterHeader.svg';
 
 const B = props => <Text style={{fontWeight: 'bold'}}>{props.children}</Text>;
 
 export default function GreetingScreen({navigation}) {
+  const {mFunc, setMFunc} = useContext(FxContext);
+  const [isLoading, setIsLoading] = useState(false);
   return (
     <>
       <React.Fragment>
@@ -29,7 +33,7 @@ export default function GreetingScreen({navigation}) {
               <Header width={'100%'} />
               <WhiteSpace size="lg" />
               <Text style={styles.desc}>
-                TracePH would like to ask for your consent in sending
+                detectPH would like to ask for your consent in sending
                 information of encounters with you if they have been confirmed
                 positive or PUI (Person Under Investigation) of COVID-19.
               </Text>
@@ -41,21 +45,40 @@ export default function GreetingScreen({navigation}) {
               </Text>
               <WhiteSpace size="lg" />
               <Text style={styles.desc}>
-                TracePH exchanges Bluetooth signals with nearby mobile phones
+                detectPH exchanges Bluetooth signals with nearby mobile phones
                 which runs the same app.
               </Text>
               <WhiteSpace size="lg" />
               <WhiteSpace size="sm" />
               <Button
                 onPress={() => {
-                  navigation.navigate('askForBluetooth');
+                  setIsLoading(true);
+                  mFunc
+                    .getNodeId()
+                    .then(() => {
+                      setIsLoading(false);
+                      mFunc
+                        .enableBluetooth()
+                        .then(() => {
+                          navigation.navigate('Sharing');
+                        })
+                        .catch(err => {
+                          console.log('err', err);
+                          navigation.navigate('askForBluetooth');
+                        });
+                    })
+                    .catch(() => {
+                      setIsLoading(false);
+                    });
                 }}
                 style={{
                   borderRadius: 30,
                   width: '90%',
                   backgroundColor: '#D63348',
                 }}
-                type="warning">
+                type="warning"
+                loading={isLoading}
+                disabled={isLoading}>
                 I Agree on this
               </Button>
               <WhiteSpace size="lg" />

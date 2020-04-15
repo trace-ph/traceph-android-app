@@ -19,8 +19,9 @@ export const getNode = () => {
 export const insertNode = payload => {
   return Axios({
     method: 'post',
+    timeout: 5000,
     url: BASE_URL,
-    data: {device_id: 'AA:BB:CC:DD:EE:00'},
+    data: {device_id: payload},
     headers: {
       'Content-Type': 'application/json',
     },
