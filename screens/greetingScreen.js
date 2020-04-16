@@ -33,7 +33,7 @@ export default function GreetingScreen({navigation}) {
               <Header width={'100%'} />
               <WhiteSpace size="lg" />
               <Text style={styles.desc}>
-                detectPH would like to ask for your consent in sending
+                DetectPH would like to ask for your consent in sending
                 information of encounters with you if they have been confirmed
                 positive or PUI (Person Under Investigation) of COVID-19.
               </Text>
@@ -45,7 +45,7 @@ export default function GreetingScreen({navigation}) {
               </Text>
               <WhiteSpace size="lg" />
               <Text style={styles.desc}>
-                detectPH exchanges Bluetooth signals with nearby mobile phones
+                DetectPH exchanges Bluetooth signals with nearby mobile phones
                 which runs the same app.
               </Text>
               <WhiteSpace size="lg" />

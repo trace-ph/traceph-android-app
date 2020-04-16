@@ -45,7 +45,7 @@ export default function AskBluScreen({navigation}) {
               <WhiteSpace size="lg" />
               <Text style={styles.desc}>
                 Please turn on your bluetooth from your settings to start using
-                detectPH app.
+                DetectPH app.
               </Text>
               <WhiteSpace size="lg" />
               <WhiteSpace size="lg" />
