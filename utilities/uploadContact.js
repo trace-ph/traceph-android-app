@@ -1,7 +1,14 @@
 import {insertContacts} from '../apis/contact';
 
-export default function uploadContact(contactArr, cancel) {
+export default function uploadContact(contactArr, BackgroundTimer) {
   return new Promise((resolve, reject) => {
+    let cancel = {exec: null};
+    const contactTOId = BackgroundTimer.setTimeout(() => {
+      console.log('timeout');
+      cancel.exec();
+      reject('error sis');
+    }, 5000);
+
     insertContacts(
       {
         contacts: contactArr,
@@ -10,6 +17,7 @@ export default function uploadContact(contactArr, cancel) {
     )
       .then(res => {
         console.log('axios connected', [res.status]);
+        BackgroundTimer.clearTimeout(contactTOId);
         resolve([]);
       })
       .catch(err => {

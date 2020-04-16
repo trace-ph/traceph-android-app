@@ -95,7 +95,13 @@ const App = () => {
       console.log('network state', netStat);
     });
 
-    setMFunc({enableBluetooth, startMonitoring, stopMonitoring, getNodeId});
+    setMFunc({
+      enableBluetooth,
+      startMonitoring,
+      stopMonitoring,
+      getNodeId,
+      nodeIdRef,
+    });
     initializeLocalStore();
 
     getLocation();
@@ -413,19 +419,14 @@ const App = () => {
           });
 
           if (isConnectedToNetRef.current && localStorage.length !== 0) {
-            let cancel = {exec: null};
-            const contactTOId = BackgroundTimer.setTimeout(() => {
-              cancel.exec();
-            }, 3000); //FIXME cant handle timeouts
-            await uploadContact(localStorage, cancel)
+            //TODO transfer timer to upoad contact
+            console.log('uploading contact');
+            await uploadContact(localStorage, BackgroundTimer)
               .then(() => {
                 localStorage = [];
               })
               .catch(err => {
                 console.log('upload error', err);
-              })
-              .finally(() => {
-                BackgroundTimer.clearTimeout(contactTOId);
               });
           }
           try {
@@ -433,6 +434,7 @@ const App = () => {
           } catch (err) {
             console.log('local storage cant update', err);
           }
+          console.log('ending a run');
           setCurrentDiscoveredDevices([]);
           setDiscoveryLog([]);
           startScan(true);
@@ -588,13 +590,13 @@ const App = () => {
 
   return (
     <React.Fragment>
-      <WingBlank>
+      {/* <WingBlank>
         <TextareaItem
           rows={8}
           placeholder="discovery logs"
           value={dataForDisplay}
         />
-      </WingBlank>
+      </WingBlank> */}
       <NavigationContainer>
         <Stack.Navigator initialRouteName="Greet" headerMode="none">
           <Stack.Screen name="Greet" component={GreetingScreen} />
