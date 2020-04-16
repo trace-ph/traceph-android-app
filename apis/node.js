@@ -1,4 +1,4 @@
-import Axios from 'axios';
+import Axios, {CancelToken} from 'axios';
 import {API_URL} from '../configs';
 
 const BASE_URL = `${API_URL}/node`;
@@ -16,11 +16,12 @@ export const getNode = () => {
   });
 };
 
-export const insertNode = payload => {
+export const insertNode = (payload, cancel) => {
   return Axios({
     method: 'post',
-    timeout: 5000,
+    timeout: 180000,
     url: BASE_URL,
+    cancelToken: new CancelToken(c => (cancel.exec = c)),
     data: {device_id: payload},
     headers: {
       'Content-Type': 'application/json',

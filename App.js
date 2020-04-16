@@ -141,7 +141,11 @@ const App = () => {
         } catch (err) {
           console.log('node_id not found', err);
           if (isConnectedToNetRef.current) {
-            registerDevice()
+            let cancel = {exec: null};
+            const regTOId = BackgroundTimer.setTimeout(() => {
+              cancel.exec();
+            }, 180000);
+            registerDevice(cancel)
               .then(async node_id => {
                 try {
                   await MmkvStore.setStringAsync('node_id', node_id);
@@ -156,6 +160,9 @@ const App = () => {
                 console.log('registering error', err);
                 ToastModule.showToast('Internet Connection Needed. Try again.');
                 reject();
+              })
+              .finally(() => {
+                BackgroundTimer.clearTimeout(regTOId);
               });
           } else {
             ToastModule.showToast('Internet Connection Needed. Try again.');
@@ -297,7 +304,7 @@ const App = () => {
             new Promise(resolve => {
               if (item.data === '') {
                 deviceToConnect.push(item);
-              } else if (item.data === 'Handshake') {
+              } else {
                 temp_recognizedDevices.push(item);
               }
 
@@ -406,12 +413,19 @@ const App = () => {
           });
 
           if (isConnectedToNetRef.current && localStorage.length !== 0) {
-            await uploadContact(localStorage)
+            let cancel = {exec: null};
+            const contactTOId = BackgroundTimer.setTimeout(() => {
+              cancel.exec();
+            }, 3000); //FIXME cant handle timeouts
+            await uploadContact(localStorage, cancel)
               .then(() => {
                 localStorage = [];
               })
               .catch(err => {
                 console.log('upload error', err);
+              })
+              .finally(() => {
+                BackgroundTimer.clearTimeout(contactTOId);
               });
           }
           try {
@@ -441,7 +455,7 @@ const App = () => {
   const startAdvertising = () =>
     new Promise((resolve, reject) => {
       if (isBleSupportedRef.current) {
-        BleModule.advertise('', (res, err) => {
+        BleModule.advertise(nodeIdRef.current, (res, err) => {
           if (res) {
             console.log('advertising');
             resolve();

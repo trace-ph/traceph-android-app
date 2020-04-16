@@ -1,10 +1,13 @@
 import {insertContacts} from '../apis/contact';
 
-export default function uploadContact(contactArr) {
+export default function uploadContact(contactArr, cancel) {
   return new Promise((resolve, reject) => {
-    insertContacts({
-      contacts: contactArr,
-    })
+    insertContacts(
+      {
+        contacts: contactArr,
+      },
+      cancel,
+    )
       .then(res => {
         console.log('axios connected', [res.status]);
         resolve([]);
