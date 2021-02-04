@@ -19,7 +19,7 @@ import {
 import BackgroundTimer from 'react-native-background-timer';
 import BleManager from 'react-native-ble-manager';
 import VIForegroundService from '@voximplant/react-native-foreground-service';
-import GetLocation from 'react-native-get-location';
+// import GetLocation from 'react-native-get-location';
 import MMKV from 'react-native-mmkv-storage';
 import NetInfo from '@react-native-community/netinfo';
 
@@ -53,7 +53,7 @@ const App = () => {
   const [discoveryLog, setDiscoveryLog] = useState([]);
   const [recognizedDevices, setRecognizedDevices] = useState([]);
   const [dataForDisplay, setDataForDisplay] = useState('');
-  const [location, setLocation] = useState([]);
+  // const [location, setLocation] = useState([]);
   const [isConnectedToNet, setIsConnectedToNet] = useState(false);
   const [nodeId, setNodeId] = useState(null);
 
@@ -62,7 +62,7 @@ const App = () => {
   const discoveryLogRef = useRef();
   const isBleSupportedRef = useRef();
   const recognizedDevicesRef = useRef();
-  const locationRef = useRef();
+  // const locationRef = useRef();
   const isConnectedToNetRef = useRef();
   const nodeIdRef = useRef();
 
@@ -104,7 +104,7 @@ const App = () => {
     });
     initializeLocalStore();
 
-    getLocation();
+    // getLocation();
   }, []);
 
   useEffect(() => {
@@ -124,9 +124,9 @@ const App = () => {
     recognizedDevicesRef.current = recognizedDevices;
   }, [recognizedDevices]);
 
-  useEffect(() => {
-    locationRef.current = location;
-  }, [location]);
+  // useEffect(() => {
+  //   locationRef.current = location;
+  // }, [location]);
 
   useEffect(() => {
     isConnectedToNetRef.current = isConnectedToNet;
@@ -190,26 +190,26 @@ const App = () => {
   const enableBluetooth = useCallback(
     () =>
       new Promise((resolve, reject) => {
-        if (Platform.OS === 'android' && Platform.Version >= 23) {
-          PermissionsAndroid.check(
-            PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION,
-          ).then(result => {
-            if (result) {
-              console.log('Android Permission is OK');
-            } else {
-              PermissionsAndroid.request(
-                PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION,
-              ).then(result => {
-                if (result) {
-                  console.log('User accept');
-                } else {
-                  console.log('User refuse');
-                  reject();
-                }
-              });
-            }
-          });
-        }
+        // if (Platform.OS === 'android' && Platform.Version >= 23) {
+        //   PermissionsAndroid.check(
+        //     PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION,
+        //   ).then(result => {
+        //     if (result) {
+        //       console.log('Android Permission is OK');
+        //     } else {
+        //       PermissionsAndroid.request(
+        //         PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION,
+        //       ).then(result => {
+        //         if (result) {
+        //           console.log('User accept');
+        //         } else {
+        //           console.log('User refuse');
+        //           reject();
+        //         }
+        //       });
+        //     }
+        //   });
+        // }
         //Enables Bluetooth
         BleManager.enableBluetooth()
           .then(() => {
@@ -280,26 +280,26 @@ const App = () => {
     [],
   );
 
-  const getLocation = () => {
-    GetLocation.getCurrentPosition({
-      enableHighAccuracy: true,
-      timeout: 5000,
-    })
-      .then(locDeets => {
-        const {longitude, latitude, time} = locDeets;
-        let mLocation = [longitude, latitude, time];
-        setLocation(mLocation);
-      })
-      .catch(error => {
-        const {code, message} = error;
-        console.warn(code, message);
-      });
-  };
+  // const getLocation = () => {
+  //   GetLocation.getCurrentPosition({
+  //     enableHighAccuracy: true,
+  //     timeout: 5000,
+  //   })
+  //     .then(locDeets => {
+  //       const {longitude, latitude, time} = locDeets;
+  //       let mLocation = [longitude, latitude, time];
+  //       setLocation(mLocation);
+  //     })
+  //     .catch(error => {
+  //       const {code, message} = error;
+  //       console.warn(code, message);
+  //     });
+  // };
 
   const startTimer = useCallback(
     () =>
       new Promise((resolve, reject) => {
-        getLocation();
+        // getLocation();
         intervalRef.current = BackgroundTimer.setInterval(async () => {
           const deviceToConnect = [];
           const temp_recognizedDevices = [...recognizedDevicesRef.current];
@@ -410,7 +410,7 @@ const App = () => {
                 timestamp: val.time,
                 source_node_id: nodeIdRef.current,
                 node_pair: temp_recognizedDevices[recogDevIndex].data,
-                location: {type: 'Point', coordinates: locationRef.current},
+                // location: {type: 'Point', coordinates: locationRef.current},
                 rssi: val.rssi,
                 txPower: temp_recognizedDevices[recogDevIndex].txPower,
               };
@@ -509,7 +509,7 @@ const App = () => {
   const handleDiscoverPeripheral = peripheral => {
     var serviceData = '';
     let date = new Date().getDate(); //Current Date
-    let month = new Date().getMonth() + 1; //Current Month
+    let month = new Date().getMonth(); //Current Month
     let year = new Date().getFullYear(); //Current Year
     let hours = new Date().getHours(); //Current Hours
     let min = new Date().getMinutes(); //Current Minutes
