@@ -190,26 +190,26 @@ const App = () => {
   const enableBluetooth = useCallback(
     () =>
       new Promise((resolve, reject) => {
-        // if (Platform.OS === 'android' && Platform.Version >= 23) {
-        //   PermissionsAndroid.check(
-        //     PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION,
-        //   ).then(result => {
-        //     if (result) {
-        //       console.log('Android Permission is OK');
-        //     } else {
-        //       PermissionsAndroid.request(
-        //         PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION,
-        //       ).then(result => {
-        //         if (result) {
-        //           console.log('User accept');
-        //         } else {
-        //           console.log('User refuse');
-        //           reject();
-        //         }
-        //       });
-        //     }
-        //   });
-        // }
+        if (Platform.OS === 'android' && Platform.Version >= 23) {
+          PermissionsAndroid.check(
+            PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION,
+          ).then(result => {
+            if (result) {
+              console.log('Android Permission is OK');
+            } else {
+              PermissionsAndroid.request(
+                PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION,
+              ).then(result => {
+                if (result) {
+                  console.log('User accept');
+                } else {
+                  console.log('User refuse');
+                  reject();
+                }
+              });
+            }
+          });
+        }
         //Enables Bluetooth
         BleManager.enableBluetooth()
           .then(() => {
