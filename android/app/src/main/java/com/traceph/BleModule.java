@@ -75,7 +75,7 @@ public class BleModule extends ReactContextBaseJavaModule {
         }
         AdvertiseSettings advertiseSettings = new AdvertiseSettings.Builder()
                 .setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_BALANCED)
-                .setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_HIGH).setConnectable(true).build();
+                .setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_LOW).setConnectable(true).build();
         device_name = deviceName;
         String serviceDataString = device_name;
 
