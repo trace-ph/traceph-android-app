@@ -42,12 +42,15 @@ var formatISO9075 = require('date-fns/formatISO9075');
 
 const {BleModule, ToastModule} = NativeModules;
 
+// to register event listeners on BleManager from 'react-native-ble-manager'
 const BleManagerModule = NativeModules.BleManager;
 const bleManagerEmitter = new NativeEventEmitter(BleManagerModule);
 
+// to register event listers on BleModule.java
 const bleModuleEmitter = new NativeEventEmitter(BleModule);
 
 const App = () => {
+  // declare state variables
   const [isBleSupported, setIsBleSupported] = useState(false);
   const [currentDiscoveredDevices, setCurrentDiscoveredDevices] = useState([]);
   const [discoveryLog, setDiscoveryLog] = useState([]);
@@ -57,6 +60,7 @@ const App = () => {
   const [isConnectedToNet, setIsConnectedToNet] = useState(false);
   const [nodeId, setNodeId] = useState(null);
 
+  // decalre references that will store previous state values
   var intervalRef = useRef(null);
   const currentDiscoveredDevicesRef = useRef();
   const discoveryLogRef = useRef();
@@ -66,19 +70,28 @@ const App = () => {
   const isConnectedToNetRef = useRef();
   const nodeIdRef = useRef();
 
+  // FxProvider value set as state in FxContext, tagged in index.js
   const {mFunc, setMFunc} = useContext(FxContext);
 
+  // instantiate key-value storage with ID
   var MmkvStore = new MMKV.Loader().withInstanceID('bleDiscoveryLogs');
 
+  // note: useEffect runs *after* the DOM is painted (after render, as a "side effect")
   useEffect(() => {
     //Starts BLEManager
     BleManager.start({showAlert: false});
 
+	// ADD EVENT LISTENERS
+
+    // Listen to discovery event 'BleManagerDiscoverPeripheral', see: https://github.com/innoveit/react-native-ble-manager
+    // and pass the event params to handleDiscoverPeripheral
+    // this even looks for peripherals
     const handlerDiscover = bleManagerEmitter.addListener(
       'BleManagerDiscoverPeripheral',
       handleDiscoverPeripheral,
     );
 
+	// event when peripheral scanning has ended
     const handlerStopScan = bleManagerEmitter.addListener(
       'BleManagerStopScan',
       handleStopScan,
@@ -95,6 +108,7 @@ const App = () => {
       console.log('network state', netStat);
     });
 
+	// assign functions to mFunc in FxContext, mFuncs are used in screens
     setMFunc({
       enableBluetooth,
       startMonitoring,
@@ -104,7 +118,7 @@ const App = () => {
     });
     initializeLocalStore();
 
-    // getLocation();
+    // getLocation();	// assign value to location state
   }, []);
 
   useEffect(() => {
@@ -136,24 +150,30 @@ const App = () => {
     nodeIdRef.current = nodeId;
   }, [nodeId]);
 
+  // get device android ID
   const getNodeId = useCallback(
     () =>
       new Promise(async (resolve, reject) => {
         //CHECKOUT if node_id changes at reinstall, and so display the node_id on screen
         try {
-          let node_id = (await MmkvStore.getStringAsync('node_id')) || null;
+		  // set android id if available
+		  let node_id = (await MmkvStore.getStringAsync('node_id')) || null;
           setNodeId(node_id);
           resolve();
+
         } catch (err) {
           console.log('node_id not found', err);
+		  // if err, register node id
           if (isConnectedToNetRef.current) {
             let cancel = {exec: null};
             const regTOId = BackgroundTimer.setTimeout(() => {
               cancel.exec();
             }, 180000);
-            registerDevice(cancel)
+
+            registerDevice(cancel)	// gets androidId from device & inserts it to api.traceph.org
               .then(async node_id => {
                 try {
+				  // store retrieved node_id
                   await MmkvStore.setStringAsync('node_id', node_id);
                   setNodeId(node_id);
                   resolve();
@@ -170,6 +190,7 @@ const App = () => {
               .finally(() => {
                 BackgroundTimer.clearTimeout(regTOId);
               });
+
           } else {
             ToastModule.showToast('Internet Connection Needed. Try again.');
             reject();
@@ -179,6 +200,7 @@ const App = () => {
     [],
   );
 
+  // initialize MMKVwithID local storage
   const initializeLocalStore = async () => {
     try {
       MmkvStore = await MmkvStore.initialize();
@@ -187,9 +209,11 @@ const App = () => {
     }
   };
 
+  // check availability and acquire permission to turn BLE on
   const enableBluetooth = useCallback(
     () =>
       new Promise((resolve, reject) => {
+		// acquire permission
         if (Platform.OS === 'android' && Platform.Version >= 23) {
           PermissionsAndroid.check(
             PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION,
@@ -210,9 +234,10 @@ const App = () => {
             }
           });
         }
+
         //Enables Bluetooth
         BleManager.enableBluetooth()
-          .then(() => {
+          .then(() => {		// then setState based on BleModule advert avail check
             BleModule.isAdvertisingSupported(res => {
               setIsBleSupported(res);
             });
@@ -228,6 +253,9 @@ const App = () => {
     [],
   );
 
+  // create the required notification channel and runs corresponding service in
+  // the background while displaying notification.
+  // VIForegroundService is tied to ap p via AndroidManifest.xml
   const startForegroundService = async () => {
     if (Platform.Version >= 26) {
       const channelConfig = {
@@ -241,7 +269,7 @@ const App = () => {
     }
 
     const notificationConfig = {
-      id: 9811385,
+      id: 9811385,	// unique id
       title: 'detectPH Active',
       text: 'The app is running in the background.',
       icon: 'ic_launcher_round',
@@ -269,6 +297,7 @@ const App = () => {
     return returnVal;
   };
 
+  // stops apps's overall close-contact monitoring
   const stopMonitoring = useCallback(
     () =>
       new Promise((resolve, reject) => {
@@ -280,6 +309,7 @@ const App = () => {
     [],
   );
 
+  // assign location to location-state
   // const getLocation = () => {
   //   GetLocation.getCurrentPosition({
   //     enableHighAccuracy: true,
@@ -317,6 +347,9 @@ const App = () => {
               resolve();
             });
 
+		  // for each item in currentDiscovDevices, check if it's in recognizedDevices
+          // if not, add it to deviceToConnect if its data is empty (segregate)
+          // else add it to recognizedDevices
           currentDiscoveredDevicesRef.current.forEach(async item => {
             function checkIfRecognized(obj) {
               return obj.id === item.id;
@@ -328,6 +361,8 @@ const App = () => {
             }
           });
 
+		  // connect to each segregated device, read characteristic data, then
+          // finally update recognized devices
           for (let i = 0; i < deviceToConnect.length; i++) {
             let isConnected = false;
             var id = deviceToConnect[i].id;
@@ -347,10 +382,11 @@ const App = () => {
                 //console.log('reading data from ', id);
                 await BleManager.read(
                   id,
-                  '0000ff01-0000-1000-8000-00805F9B34FB',
-                  '0000ff01-0000-1000-8000-00805F9B34FB',
+                  '0000ff01-0000-1000-8000-00805F9B34FB',		// serviceUUID
+                  '0000ff01-0000-1000-8000-00805F9B34FB',		// characUUID
+				  // UUID's are declared and used in BleModule.java
                 )
-                  .then(readData => {
+                  .then(readData => {	// when data is read, add as recog device
                     var buffer = Buffer.from(readData);
                     const serviceData = buffer.toString();
                     //set the serviceData to data
@@ -361,7 +397,7 @@ const App = () => {
                   .catch(err => {
                     console.log('read error', err);
                   })
-                  .finally(() => {
+                  .finally(() => {	// after trying to read data, disconnect from periph
                     if (isConnected) {
                       BleManager.disconnect(id, true)
                         .then(() => {
@@ -372,6 +408,7 @@ const App = () => {
                         });
                     }
                   });
+
               })
               .catch(error => {
                 console.log('getting Service Data failed: ', error);
@@ -386,10 +423,12 @@ const App = () => {
                 }
               });
           }
-          setRecognizedDevices(temp_recognizedDevices);
+          setRecognizedDevices(temp_recognizedDevices);		// update recognized devs
 
+		  //get local storage
           var localStorage = [];
           try {
+			// get storage if it exists, or empty array
             localStorage = (await MmkvStore.getArrayAsync('discLogs')) || [];
             console.log('localStorage', localStorage);
             let mtext = JSON.stringify(localStorage);
@@ -397,6 +436,11 @@ const App = () => {
           } catch (err) {
             console.log('local storage not found', err);
           }
+
+		  // check for every value in discoveryLog if it's on recogDevs, if yes
+          // then add that device's' info to localStorage
+          // That is, if it was discovered and it's deviceName/androidID was collected
+          // then add to localstorage for uploading
           discoveryLogRef.current.forEach(val => {
             function checkIfOnRecognized(obj) {
               return obj.id === val.id;
@@ -404,7 +448,7 @@ const App = () => {
             let recogDevIndex = temp_recognizedDevices.findIndex(
               checkIfOnRecognized,
             );
-            if (recogDevIndex >= 0) {
+            if (recogDevIndex >= 0) {		//collect contact info to upload
               let contact = {
                 type: 'direct-bluetooth',
                 timestamp: val.time,
@@ -418,8 +462,9 @@ const App = () => {
             }
           });
 
+		  // if there's internet, upload contact (POST)
           if (isConnectedToNetRef.current && localStorage.length !== 0) {
-            //TODO transfer timer to upoad contact
+            //TODO transfer timer to upload contact
             console.log('uploading contact');
             await uploadContact(localStorage, BackgroundTimer)
               .then(() => {
@@ -429,11 +474,14 @@ const App = () => {
                 console.log('upload error', err);
               });
           }
-          try {
+
+          try {		// update 'discLogs' with localStorage
             await MmkvStore.setArrayAsync('discLogs', localStorage);
           } catch (err) {
             console.log('local storage cant update', err);
           }
+
+		  // end of commands for one 7sec interval, clear arrays
           console.log('ending a run');
           setCurrentDiscoveredDevices([]);
           setDiscoveryLog([]);
@@ -458,12 +506,12 @@ const App = () => {
     new Promise((resolve, reject) => {
       if (isBleSupportedRef.current) {
         BleModule.advertise(nodeIdRef.current, (res, err) => {
-          if (res) {
+          if (res) {		// if advert successfully started
             console.log('advertising');
             resolve();
           }
         });
-      } else {
+	} else {		// if not supported
         reject();
       }
     });
@@ -488,6 +536,8 @@ const App = () => {
     });
   };
 
+  // scan for periphs with service UUID as below, for 3 seconds, allow
+  // duplicate
   const startScan = isUseUuid =>
     new Promise((resolve, reject) => {
       let scanUuids = [];
@@ -521,11 +571,13 @@ const App = () => {
       return obj.id === peripheral.id && obj.time === timeStamp;
     }
 
+	// check if discovered peripheral is already in discoveryLog
     let logLength = discoveryLogRef.current.length;
     let isPeripheralExisting = discoveryLogRef.current.some(checkIfExistInLog);
 
+	// add peripheral details to states: discoveryLog and currentDiscoveredDevices
     if (logLength === 0 || !isPeripheralExisting) {
-      //log only records the device id, rssi, and time;
+      //discoveryLog only records the device id, rssi, and time;
       //the identity(data) will be referenced from discoveredDevices
       setDiscoveryLog(currArr => {
         let temp_currArr = [...currArr];
@@ -538,6 +590,7 @@ const App = () => {
         return temp_currArr;
       });
 
+	  // while currentDiscoveredDevices records id, data, and txPower.
       setCurrentDiscoveredDevices(currentArr => {
         let temp_currentArr = [...currentArr];
 
@@ -545,6 +598,7 @@ const App = () => {
           return item.id === peripheral.id;
         };
 
+		// if periph is not yet on currentDiscoveredDevices
         if (temp_currentArr.findIndex(checkIfIdExist) === -1) {
           //get the advertisement data
           if (peripheral.advertising.serviceData.hasOwnProperty('ff01')) {
@@ -566,14 +620,15 @@ const App = () => {
     }
   };
 
+  // sort of the Main() function
   const startMonitoring = useCallback(
     () =>
       new Promise(async (resolve, reject) => {
-        startAdvertising()
-          .then(() => startServer())
-          .then(() => startTimer())
-          .then(() => startScan(true))
-          .then(() => startForegroundService())
+        startAdvertising()				// configure adv packet and begin broadcasting
+          .then(() => startServer())	// setup GATT server with a Service
+          .then(() => startTimer())		// begin intervals of data-collect and upload
+          .then(() => startScan(true))	// scan for avail periphs w/ given servUUIDs
+          .then(() => startForegroundService())	// permit running on background
           .then(() => {
             resolve();
           })
