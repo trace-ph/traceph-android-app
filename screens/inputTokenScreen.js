@@ -13,26 +13,29 @@ import {
 
 const {ToastModule} = NativeModules;
 
+import FxContext from '../FxContext';
+
 import {Button, Flex, WhiteSpace, WingBlank} from '@ant-design/react-native';
 
 // For OTP input fields
-import { CodeField, Cursor, useBlurOnFulfill, useClearByFocusCell } from 
+import { CodeField, Cursor, useBlurOnFulfill, useClearByFocusCell } from
 'react-native-confirmation-code-field';
 
 // For sending info via HTTP
 import Axios from 'axios';
+import { API_URL } from '../configs';
 
 
 // Checks the input token
 // Returns verdict message
-async function tokenCheck(data, token, input){
+async function tokenCheck(data, token, input, node_id){
   if(token == input){
-    const reportURL = 'http://192.168.0.14:3001/api/qr/report';
-    let verdict = await Axios.get(reportURL, 
+	const reportURL = API_URL + '/qr/report';
+    let verdict = await Axios.get(reportURL,
       { params: {     // Parameters to send
-        node_id: "D", 
+        node_id: node_id,
         data: data,
-        token: input, 
+        token: input,
     }})
     // .then((res) => console.log(res))
     .catch((err) => console.error(err));
@@ -40,7 +43,7 @@ async function tokenCheck(data, token, input){
     // return verdict.body;
     return verdict.data;
 
-  } else 
+  } else
     return 'Wrong input code';
 }
 
@@ -48,7 +51,7 @@ async function tokenCheck(data, token, input){
 export default function inputToken( {route, navigation} ) {
   // Get the parameters and context
   const { data, token } = route.params;
-  // const { mFunc, setMFunc } = useContext(FxContext);
+  const { mFunc, setMFunc } = useContext(FxContext);
 
   // Code field parameters
   const CELL_COUNT = 6;
@@ -98,7 +101,7 @@ export default function inputToken( {route, navigation} ) {
           }
 
           // Get verdict
-          let verdict = await tokenCheck(data, token, value);
+          let verdict = await tokenCheck(data, token, value, mFunc.nodeIdRef.current);
           // ToastModule.showToast(verdict);
 
           navigation.replace('reportVerdict', { verdict: verdict });
@@ -141,7 +144,7 @@ const styles = StyleSheet.create({
     //backgroundColor: '#808689',
   },
 
-  //Styles for the OTP input fields 
+  //Styles for the OTP input fields
   root: {padding: 20, minHeight: 300},
   title: {textAlign: 'center', fontSize: 30},
   codeFieldRoot: {

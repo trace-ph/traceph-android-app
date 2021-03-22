@@ -6,14 +6,19 @@ import {
 
 const { ToastModule } = NativeModules;
 
+import FxContext from '../FxContext';
+
 // For the QR code scanner camera
 import QRCodeScanner from 'react-native-qrcode-scanner';
 
 // For sending info via HTTP
 import Axios from 'axios';
+import { API_URL } from '../configs';
 
 
-export default class QRscanner extends React.Component {   
+export default class QRscanner extends React.Component {
+	static contextType = FxContext;
+
     constructor() {
         super();
     }
@@ -24,12 +29,14 @@ export default class QRscanner extends React.Component {
         console.log(e.data);
 
         // Send the data to auth-api
-        const authURL = 'http://192.168.0.14:3001/api/qr/auth';
-        Axios.get(authURL, 
+		const authURL = API_URL + '/qr/auth';
+		const {mFunc, setMFunc} = this.context;
+        Axios.get(authURL,
             { params: {     // Parameters to send
-                node_id: "D", 
-                data: e.data 
+                node_id: mFunc.nodeIdRef.current,
+                data: e.data
             }})
+
         .then((res) => {
             // console.log(res)
             // Go to Token input screen when successful
@@ -41,13 +48,14 @@ export default class QRscanner extends React.Component {
                 token: res.data,          // Token
             });
         })
+
         .catch((err) => {
             // Go to verdict screen if status == 400
             /* Cause of 400 status:
                 > QR code is not a QR code of DetectPH
                 > QR code could not be decrypted
                 > User has already reported for the day
-            */ 
+            */
             console.error(err);
             this.props.navigation.replace('reportVerdict', {
                 verdict: 'Sorry but your report could not be made. It\'s possible that you may have reported before or your QR code is broken.\n If you reported before, please try again tomorrow.'
@@ -59,7 +67,7 @@ export default class QRscanner extends React.Component {
         return (
             <View style={{flex:1}}>
                 {/* Opens camera and scan QR code */}
-                {(<QRCodeScanner    
+                {(<QRCodeScanner
                     onRead={this.onSuccess.bind(this)}
                     reactivate={true}
                     reactivateTimeout={4000}/>

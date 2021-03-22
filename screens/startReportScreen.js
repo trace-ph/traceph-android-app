@@ -15,7 +15,7 @@ import {
 import {Button, Flex, WhiteSpace, WingBlank} from '@ant-design/react-native';
 const B = props => <Text style={{fontWeight: 'bold'}}>{props.children}</Text>;
 
-//
+
 export default function startReport( {navigation} ) {
 
   return (
@@ -38,10 +38,10 @@ export default function startReport( {navigation} ) {
         backgroundColor: '#D63348',
         alignSelf: 'center',
     }}
-    > 
+    >
     Report
     </Button>
-    
+
     </View>
   );
 }
