@@ -6,8 +6,17 @@ import React, {
   useContext,
 } from 'react';
 
-import {NavigationContainer} from '@react-navigation/native';
-import {createStackNavigator} from '@react-navigation/stack';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+
+/*
+	The drawer navigation has some particularities, specifically in the react-native-reanimated
+	They aren't seen in most tutorials so see the link below
+	@see https://docs.swmansion.com/react-native-reanimated/docs/installation/
+
+	Some errors of reanimated only asks for you to reset cache or fresh install node modules
+*/
+import { createDrawerNavigator } from '@react-navigation/drawer';
 
 import {
   NativeEventEmitter,
@@ -39,6 +48,7 @@ import registerDevice from './utilities/registerDevice';
 import {TextareaItem, WingBlank, Button} from '@ant-design/react-native';
 
 const Stack = createStackNavigator();
+const Drawer = createDrawerNavigator();
 
 var Buffer = require('buffer/').Buffer;
 
@@ -682,8 +692,10 @@ const App = () => {
         />
       </WingBlank> */}
       <NavigationContainer>
-        <ReportNavigator />
-        {/* <MainNavigator /> */}
+		  <Drawer.Navigator initialRouteName="Home">
+		  	<Drawer.Screen name="Home" component={MainNavigator} />
+			<Drawer.Screen name="Report" component={ReportNavigator} />
+		  </Drawer.Navigator>
       </NavigationContainer>
     </React.Fragment>
   );
