@@ -26,6 +26,10 @@ import NetInfo from '@react-native-community/netinfo';
 import SharingScreen from './screens/sharingScreen';
 import GreetingScreen from './screens/greetingScreen';
 import AskBluScreen from './screens/askForBluetoothScreen';
+import QRscanner from './screens/QRscanScreen';
+import inputToken from './screens/inputTokenScreen';
+import reportVerdict from './screens/reportVerdictScreen';
+import startReport from './screens/startReportScreen';
 
 import FxContext from './FxContext';
 
@@ -48,6 +52,31 @@ const bleManagerEmitter = new NativeEventEmitter(BleManagerModule);
 
 // to register event listers on BleModule.java
 const bleModuleEmitter = new NativeEventEmitter(BleModule);
+
+
+// Stack navigator of BLE
+const MainNavigator = () => {
+  return (
+    <Stack.Navigator initialRouteName="Greet" headerMode="none">
+      <Stack.Screen name="Greet" component={GreetingScreen} />
+      <Stack.Screen name="askForBluetooth" component={AskBluScreen} />
+      <Stack.Screen name="Sharing" component={SharingScreen} />
+    </Stack.Navigator>
+  );
+}
+
+// Stack navigator of Report
+const ReportNavigator = () => {
+  return(
+    <Stack.Navigator initialRouteName="home" headerMode="none">
+      <Stack.Screen name="home" component={startReport} />
+      <Stack.Screen name="QRscanner" component={QRscanner} />
+      <Stack.Screen name="inputToken" component={inputToken} />
+      <Stack.Screen name="reportVerdict" component={reportVerdict} />
+    </Stack.Navigator>
+  );
+}
+
 
 const App = () => {
   // declare state variables
@@ -653,11 +682,8 @@ const App = () => {
         />
       </WingBlank> */}
       <NavigationContainer>
-        <Stack.Navigator initialRouteName="Greet" headerMode="none">
-          <Stack.Screen name="Greet" component={GreetingScreen} />
-          <Stack.Screen name="askForBluetooth" component={AskBluScreen} />
-          <Stack.Screen name="Sharing" component={SharingScreen} />
-        </Stack.Navigator>
+        <ReportNavigator />
+        {/* <MainNavigator /> */}
       </NavigationContainer>
     </React.Fragment>
   );
