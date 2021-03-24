@@ -58,7 +58,7 @@ export default class QRscanner extends React.Component {
             */
             console.error(err);
             this.props.navigation.replace('reportVerdict', {
-                verdict: 'Sorry but your report could not be made. It\'s possible that you may have reported before or your QR code is broken.\n If you reported before, please try again tomorrow.'
+                result: 'scan'
             });
         });
     };

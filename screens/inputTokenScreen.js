@@ -104,7 +104,7 @@ export default function inputToken( {route, navigation} ) {
           let verdict = await tokenCheck(data, token, value, mFunc.nodeIdRef.current);
           // ToastModule.showToast(verdict);
 
-          navigation.replace('reportVerdict', { verdict: verdict });
+          navigation.replace('reportVerdict', { result: verdict });
         }}
         style={{
           borderRadius: 30,
