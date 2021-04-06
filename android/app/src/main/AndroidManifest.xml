@@ -11,6 +11,9 @@
     <!-- For the QR code scanner -->
     <uses-permission android:name="android.permission.CAMERA"/>
     <uses-permission android:name="android.permission.VIBRATE"/>
+
+    <!-- For Push Notifications -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
     
     <application
       android:name=".MainApplication"

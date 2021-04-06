@@ -44,6 +44,7 @@ import FxContext from './FxContext';
 
 import uploadContact from './utilities/uploadContact';
 import registerDevice from './utilities/registerDevice';
+import getNotification from './utilities/getNotification';
 
 import {TextareaItem, WingBlank, Button} from '@ant-design/react-native';
 
@@ -98,8 +99,9 @@ const App = () => {
   // const [location, setLocation] = useState([]);
   const [isConnectedToNet, setIsConnectedToNet] = useState(false);
   const [nodeId, setNodeId] = useState(null);
+  const [notifStart, setNotifStart] = useState(false);    // Start expose notification polling
 
-  // decalre references that will store previous state values
+  // declare references that will store previous state values
   var intervalRef = useRef(null);
   const currentDiscoveredDevicesRef = useRef();
   const discoveryLogRef = useRef();
@@ -108,6 +110,7 @@ const App = () => {
   // const locationRef = useRef();
   const isConnectedToNetRef = useRef();
   const nodeIdRef = useRef();
+  const notifStartRef = useRef();
 
   // FxProvider value set as state in FxContext, tagged in index.js
   const {mFunc, setMFunc} = useContext(FxContext);
@@ -189,15 +192,28 @@ const App = () => {
     nodeIdRef.current = nodeId;
   }, [nodeId]);
 
+  // For exposed notification
+  useEffect(() => {
+    notifStartRef.current = notifStart;
+
+    if(notifStartRef.current){
+      getNotification(nodeIdRef.current);
+      console.log('Notification called');
+    }
+
+  }, [notifStart]);
+
+
   // get device android ID
   const getNodeId = useCallback(
     () =>
       new Promise(async (resolve, reject) => {
         //CHECKOUT if node_id changes at reinstall, and so display the node_id on screen
         try {
-		  // set android id if available
-		  let node_id = (await MmkvStore.getStringAsync('node_id')) || null;
+          // set android id if available
+          let node_id = (await MmkvStore.getStringAsync('node_id')) || null;
           setNodeId(node_id);
+          setNotifStart(true);      // Start notification polling when there's nodeID
           resolve();
 
         } catch (err) {
@@ -212,9 +228,10 @@ const App = () => {
             registerDevice(cancel)	// gets androidId from device & inserts it to api.traceph.org
               .then(async node_id => {
                 try {
-				  // store retrieved node_id
+				          // store retrieved node_id
                   await MmkvStore.setStringAsync('node_id', node_id);
                   setNodeId(node_id);
+                  setNotifStart(true);      // Start notification polling when there's nodeID
                   resolve();
                 } catch (err) {
                   console.log('local storage cant update', err);
@@ -309,7 +326,7 @@ const App = () => {
 
     const notificationConfig = {
       id: 9811385,	// unique id
-      title: 'detectPH Active',
+      title: 'Recording contacts',
       text: 'The app is running in the background.',
       icon: 'ic_launcher_round',
     };
@@ -386,7 +403,7 @@ const App = () => {
               resolve();
             });
 
-		  // for each item in currentDiscovDevices, check if it's in recognizedDevices
+		      // for each item in currentDiscovDevices, check if it's in recognizedDevices
           // if not, add it to deviceToConnect if its data is empty (segregate)
           // else add it to recognizedDevices
           currentDiscoveredDevicesRef.current.forEach(async item => {
@@ -400,7 +417,7 @@ const App = () => {
             }
           });
 
-		  // connect to each segregated device, read characteristic data, then
+		      // connect to each segregated device, read characteristic data, then
           // finally update recognized devices
           for (let i = 0; i < deviceToConnect.length; i++) {
             let isConnected = false;
@@ -423,7 +440,7 @@ const App = () => {
                   id,
                   '0000ff01-0000-1000-8000-00805F9B34FB',		// serviceUUID
                   '0000ff01-0000-1000-8000-00805F9B34FB',		// characUUID
-				  // UUID's are declared and used in BleModule.java
+				          // UUID's are declared and used in BleModule.java
                 )
                   .then(readData => {	// when data is read, add as recog device
                     var buffer = Buffer.from(readData);

@@ -6,9 +6,9 @@ export default function registerDevice(cancel) {
   return new Promise((resolve, reject) => {
     console.log('registering device');
     getAndroidId().then(androidId => {
-	  let deviceModel = getModel();
+	    let deviceModel = getModel();
       console.log('android id', androidId);
-	  console.log('device model', deviceModel);
+	    console.log('device model', deviceModel);
       getNodeId(androidId, deviceModel, cancel, resolve, reject);
     });
   });

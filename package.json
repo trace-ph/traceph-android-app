@@ -1,5 +1,5 @@
 {
-  "name": "TracePH",
+  "name": "detectph",
   "version": "0.0.1",
   "private": true,
   "scripts": {
@@ -33,6 +33,7 @@
     "react-native-get-location": "^1.4.2",
     "react-native-mmkv-storage": "^0.3.1",
     "react-native-permissions": "^2.2.2",
+    "react-native-push-notification": "^7.2.3",
     "react-native-qrcode-scanner": "^1.5.3",
     "react-native-reanimated": "^2.0.0",
     "react-native-safe-area-context": "^0.7.3",
