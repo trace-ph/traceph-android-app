@@ -6,18 +6,6 @@ import React, {
   useContext,
 } from 'react';
 
-import { NavigationContainer } from '@react-navigation/native';
-import { createStackNavigator } from '@react-navigation/stack';
-
-/*
-	The drawer navigation has some particularities, specifically in the react-native-reanimated
-	They aren't seen in most tutorials so see the link below
-	@see https://docs.swmansion.com/react-native-reanimated/docs/installation/
-
-	Some errors of reanimated only asks for you to reset cache or fresh install node modules
-*/
-import { createDrawerNavigator } from '@react-navigation/drawer';
-
 import {
   NativeEventEmitter,
   NativeModules,
@@ -32,14 +20,6 @@ import VIForegroundService from '@voximplant/react-native-foreground-service';
 import MMKV from 'react-native-mmkv-storage';
 import NetInfo from '@react-native-community/netinfo';
 
-import SharingScreen from './screens/sharingScreen';
-import GreetingScreen from './screens/greetingScreen';
-import AskBluScreen from './screens/askForBluetoothScreen';
-import QRscanner from './screens/QRscanScreen';
-import inputToken from './screens/inputTokenScreen';
-import reportVerdict from './screens/reportVerdictScreen';
-import startReport from './screens/startReportScreen';
-
 import FxContext from './FxContext';
 
 import uploadContact from './utilities/uploadContact';
@@ -48,8 +28,7 @@ import getNotification from './utilities/getNotification';
 
 import {TextareaItem, WingBlank, Button} from '@ant-design/react-native';
 
-const Stack = createStackNavigator();
-const Drawer = createDrawerNavigator();
+import Screens from './screens/Screens';
 
 var Buffer = require('buffer/').Buffer;
 
@@ -63,30 +42,6 @@ const bleManagerEmitter = new NativeEventEmitter(BleManagerModule);
 
 // to register event listers on BleModule.java
 const bleModuleEmitter = new NativeEventEmitter(BleModule);
-
-
-// Stack navigator of BLE
-const MainNavigator = () => {
-  return (
-    <Stack.Navigator initialRouteName="Greet" headerMode="none">
-      <Stack.Screen name="Greet" component={GreetingScreen} />
-      <Stack.Screen name="askForBluetooth" component={AskBluScreen} />
-      <Stack.Screen name="Sharing" component={SharingScreen} />
-    </Stack.Navigator>
-  );
-}
-
-// Stack navigator of Report
-const ReportNavigator = () => {
-  return(
-    <Stack.Navigator initialRouteName="home" headerMode="none">
-      <Stack.Screen name="home" component={startReport} />
-      <Stack.Screen name="QRscanner" component={QRscanner} />
-      <Stack.Screen name="inputToken" component={inputToken} />
-      <Stack.Screen name="reportVerdict" component={reportVerdict} />
-    </Stack.Navigator>
-  );
-}
 
 
 const App = () => {
@@ -196,7 +151,8 @@ const App = () => {
   useEffect(() => {
     notifStartRef.current = notifStart;
 
-    if(notifStartRef.current){
+    // Start notification polling when connected to the internet
+    if(notifStartRef.current && isConnectedToNetRef){
       getNotification(nodeIdRef.current);
       console.log('Notification called');
     }
@@ -218,7 +174,7 @@ const App = () => {
 
         } catch (err) {
           console.log('node_id not found', err);
-		  // if err, register node id
+		      // if err, register node id
           if (isConnectedToNetRef.current) {
             let cancel = {exec: null};
             const regTOId = BackgroundTimer.setTimeout(() => {
@@ -701,19 +657,7 @@ const App = () => {
 
   return (
     <React.Fragment>
-      {/* <WingBlank>
-        <TextareaItem
-          rows={8}
-          placeholder="discovery logs"
-          value={dataForDisplay}
-        />
-      </WingBlank> */}
-      <NavigationContainer>
-		  <Drawer.Navigator initialRouteName="Home">
-		  	<Drawer.Screen name="Home" component={MainNavigator} />
-			<Drawer.Screen name="Report" component={ReportNavigator} />
-		  </Drawer.Navigator>
-      </NavigationContainer>
+      <Screens />
     </React.Fragment>
   );
 };
