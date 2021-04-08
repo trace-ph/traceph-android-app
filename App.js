@@ -152,12 +152,10 @@ const App = () => {
     notifStartRef.current = notifStart;
 
     // Start notification polling when connected to the internet
-    if(notifStartRef.current && isConnectedToNetRef){
+    if(notifStartRef.current && isConnectedToNetRef.current)
       getNotification(nodeIdRef.current);
-      console.log('Notification called');
-    }
 
-  }, [notifStart]);
+  }, [notifStart, isConnectedToNet]);
 
 
   // get device android ID

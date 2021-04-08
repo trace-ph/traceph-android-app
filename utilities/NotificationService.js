@@ -15,9 +15,9 @@ export default class NotificationService {
         PushNotification.setApplicationIconBadgeNumber(0);
     });
     
-    PushNotification.getChannels(function(channels) {
-      console.log(channels);
-    });
+    // PushNotification.getChannels(function(channels) {
+    //   console.log(channels);
+    // });
   }
 
   // Configure notifications
@@ -45,7 +45,7 @@ export default class NotificationService {
         channelName: `Notification channel`,
         vibrate: true,
       },
-      (created) => console.log(`createChannel 'notifDPH-channel-id' returned '${created}'`) // (optional) callback returns whether the channel was created, false means it already existed.
+      // (created) => console.log(`createChannel 'notifDPH-channel-id' returned '${created}'`) // (optional) callback returns whether the channel was created, false means it already existed.
     );
   }
 
