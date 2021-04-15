@@ -18,6 +18,7 @@ import QRscanner from './QRscanScreen';
 import inputToken from './inputTokenScreen';
 import reportVerdict from './reportVerdictScreen';
 import startReport from './startReportScreen';
+import showNotification from './showNotification';
 
 const Stack = createStackNavigator();
 const Drawer = createDrawerNavigator();
@@ -50,9 +51,10 @@ const ReportNavigator = () => {
 export default function screens(){
     return(
       <NavigationContainer>
-		  <Drawer.Navigator initialRouteName="Home">
-		  	<Drawer.Screen name="Home" component={MainNavigator} />
+		  <Drawer.Navigator initialRouteName="Contact-tracing">
+		  	<Drawer.Screen name="Contact-tracing" component={MainNavigator} />
 			<Drawer.Screen name="Report" component={ReportNavigator} />
+			<Drawer.Screen name="Notifications" component={showNotification} />
 		  </Drawer.Navigator>
       </NavigationContainer>
     );

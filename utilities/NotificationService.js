@@ -57,6 +57,8 @@ export default class NotificationService {
       channelId: 'notifDPH-channel-id',
       title: title, 
       message: message,
+      smallIcon: 'ic_launcher_round',
+      largeIcon: 'ic_launcher_round',
     });
   }
 
