@@ -60,11 +60,11 @@ export default function GreetingScreen({navigation}) {
                       mFunc
                         .enableBluetooth()
                         .then(() => {
-                          navigation.navigate('Sharing');
+                          navigation.replace('Drawer');
                         })
                         .catch(err => {
                           console.log('err', err);
-                          navigation.navigate('askForBluetooth');
+                          navigation.replace('askForBluetooth');
                         });
                     })
                     .catch(() => {

@@ -25,11 +25,9 @@ const Drawer = createDrawerNavigator();
 
 
 // Stack navigator of BLE
-const MainNavigator = () => {
+const BLENavigator = () => {
     return (
-        <Stack.Navigator initialRouteName="Greet" headerMode="none">
-        <Stack.Screen name="Greet" component={GreetingScreen} />
-        <Stack.Screen name="askForBluetooth" component={AskBluScreen} />
+        <Stack.Navigator initialRouteName="Sharing" headerMode="none">
         <Stack.Screen name="Sharing" component={SharingScreen} />
         </Stack.Navigator>
     );
@@ -47,15 +45,26 @@ const ReportNavigator = () => {
     );
 }
 
-// Compiles all the screens; Would be put in the render of App.js
+const DrawerNavigator = () => {
+    return(
+        <Drawer.Navigator initialRouteName="Contact-tracing">
+		  	<Drawer.Screen name="Contact-tracing" component={BLENavigator} />
+			<Drawer.Screen name="Report" component={ReportNavigator} />
+			<Drawer.Screen name="Notifications" component={showNotification} />
+        </Drawer.Navigator>
+    );
+}
+
+
+// Would be put in the render of App.js
 export default function screens(){
     return(
       <NavigationContainer>
-		  <Drawer.Navigator initialRouteName="Contact-tracing">
-		  	<Drawer.Screen name="Contact-tracing" component={MainNavigator} />
-			<Drawer.Screen name="Report" component={ReportNavigator} />
-			<Drawer.Screen name="Notifications" component={showNotification} />
-		  </Drawer.Navigator>
+        <Stack.Navigator initialRouteName="Greet" headerMode="none">
+        <Stack.Screen name="Greet" component={GreetingScreen} />
+        <Stack.Screen name="Drawer" component={DrawerNavigator} />
+        <Stack.Screen name="askForBluetooth" component={AskBluScreen} />
+        </Stack.Navigator>
       </NavigationContainer>
     );
 }

@@ -12,6 +12,7 @@ import { List, Button, WhiteSpace } from '@ant-design/react-native';
 const Item = List.Item;
 const Brief = Item.Brief;
 
+
 // Shows the saved notification found in local storage
 export default function showNotification(){
     const [notifList, setNotifList] = useState([]);
@@ -31,12 +32,10 @@ export default function showNotification(){
                 {Object.keys(notifList)[0]}
                 <Brief>{notifList[Object.keys(notifList)[0]]}</Brief>
             </Item>
-            <WhiteSpace size="xl" />
             <Item>
                 {Object.keys(notifList)[1]}
                 <Brief>{notifList[Object.keys(notifList)[1]]}</Brief>
             </Item>
-            <WhiteSpace size="xl" />
             <Item>
                 {Object.keys(notifList)[2]}
                 <Brief>{notifList[Object.keys(notifList)[2]]}</Brief>

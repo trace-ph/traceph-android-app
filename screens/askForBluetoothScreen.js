@@ -60,7 +60,7 @@ export default function AskBluScreen({navigation}) {
                   mFunc
                     .enableBluetooth()
                     .then(() => {
-                      navigation.navigate('Sharing');
+                      navigation.replace('Drawer');
                     })
                     .catch(err => console.log('err', err));
                 }}
