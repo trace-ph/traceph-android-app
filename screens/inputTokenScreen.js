@@ -1,15 +1,12 @@
 import React, {useContext, useState} from 'react';
 import {
-  StyleSheet,
-  StatusBar,
   Text,
-  ScrollView,
-  Image,
-  Linking,
   NativeModules,
   View,
   SafeAreaView,
+	Alert,
 } from 'react-native';
+import styles from './Styles';
 
 const {ToastModule} = NativeModules;
 
@@ -30,7 +27,7 @@ import { API_URL } from '../configs';
 // Returns verdict message
 async function tokenCheck(data, token, input, node_id){
   if(token == input){
-	const reportURL = API_URL + '/qr/report';
+  	const reportURL = API_URL + '/qr/report';
     let verdict = await Axios.get(reportURL,
       { params: {     // Parameters to send
         node_id: node_id,
@@ -62,6 +59,15 @@ export default function inputToken( {route, navigation} ) {
     setValue,
   });
 
+	// Show authorization code as an alert message
+	const [showAlert, setShowAlert] = useState(true);
+	if(showAlert)
+		Alert.alert(
+			'Authorization code',
+			JSON.stringify(token),
+			[{ text: 'OK', onPress: () => setShowAlert(false)}],
+			{ cancelable: false }
+		);
 
   return (
     <SafeAreaView style={styles.root}>
@@ -106,71 +112,13 @@ export default function inputToken( {route, navigation} ) {
 
           navigation.replace('reportVerdict', { result: verdict });
         }}
-        style={{
-          borderRadius: 30,
-          width: '90%',
-          backgroundColor: '#D63348',
-          alignSelf: 'center',
-        }}
+        style={styles.redButton}
       >
         Submit
       </Button>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  defaultFontSize: {
-    fontSize: 24,
-  },
-  baseText: {
-    fontFamily: 'Roboto',
-  },
-  headerText: {
-    textAlign: 'left',
-    width: '100%',
-    fontSize: 34,
-    marginBottom: 12,
-    fontWeight: 'bold',
-    color: '#666666',
-  },
-  desc: {
-    textAlign: 'left',
-    fontWeight: '100',
-    fontWeight: '100',
-    fontSize: 17,
-    lineHeight: 45,
-    color: '#808689',
-    //backgroundColor: '#808689',
-  },
-
-  //Styles for the OTP input fields
-  root: {padding: 20, minHeight: 300},
-  title: {textAlign: 'center', fontSize: 30},
-  codeFieldRoot: {
-    marginTop: 20,
-    width: 280,
-    marginLeft: 'auto',
-    marginRight: 'auto',
-  },
-  cellRoot: { // Style of the underline input field
-    width: 30,
-    height: 60,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderBottomColor: '#ccc',
-    borderBottomWidth: 1,
-  },
-  cellText: {
-    color: '#000',
-    fontSize: 20,
-    textAlign: 'center',
-  },
-  focusCell: {
-    borderBottomColor: '#007AFF',
-    borderBottomWidth: 2,
-  },
-});
 
 /*
 Code Reference:
