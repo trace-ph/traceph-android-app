@@ -3,6 +3,7 @@ import {
 } from 'react-native';
 
 module.exports = StyleSheet.create({
+	// Text styles
 	defaultFontSize: {
 		fontSize: 24,
 	},
@@ -26,11 +27,15 @@ module.exports = StyleSheet.create({
 		color: '#808689',
 		//backgroundColor: '#808689',
 	},
+	subText: {
+		textAlign: 'left',
+		fontWeight: '100',
+		fontWeight: '100',
+		fontSize: 12,
+		color: '#808689',
+	},
 	link: {
-		color: '#0888E2',
-		fontSize: 20,
-		textAlign: 'center',
-		lineHeight: 22,
+		color: '#0888E2'
 	},
 
 	// Button styles
