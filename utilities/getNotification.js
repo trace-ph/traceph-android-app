@@ -1,3 +1,4 @@
+import BackgroundTimer from 'react-native-background-timer';
 import MMKV from 'react-native-mmkv-storage';
 
 import { getNotif, sendNotif } from '../apis/notification';
@@ -66,5 +67,5 @@ function formatDate(createdDate){
 }
 
 export function sleep(ms){
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise(resolve => BackgroundTimer.setTimeout(resolve, ms));
 }
