@@ -24,10 +24,8 @@ import FxContext from './FxContext';
 
 import uploadContact from './utilities/uploadContact';
 import registerDevice from './utilities/registerDevice';
-import getNotification from './utilities/getNotification';
 
-import {TextareaItem, WingBlank, Button} from '@ant-design/react-native';
-
+// Compilation of all screens
 import Screens from './screens/Screens';
 
 var Buffer = require('buffer/').Buffer;
@@ -43,6 +41,9 @@ const bleManagerEmitter = new NativeEventEmitter(BleManagerModule);
 // to register event listers on BleModule.java
 const bleModuleEmitter = new NativeEventEmitter(BleModule);
 
+// Notification
+import NotificationService from './utilities/NotificationService';
+import { pollServer, sendNotification, saveNotif, sleep } from './utilities/getNotification';
 
 const App = () => {
   // declare state variables
@@ -55,6 +56,7 @@ const App = () => {
   const [isConnectedToNet, setIsConnectedToNet] = useState(false);
   const [nodeId, setNodeId] = useState(null);
   const [notifStart, setNotifStart] = useState(false);    // Start expose notification polling
+  const [notifRunning, setNotifRunning] = useState(false);    // States if the getNotification function is already running
 
   // declare references that will store previous state values
   var intervalRef = useRef(null);
@@ -66,6 +68,7 @@ const App = () => {
   const isConnectedToNetRef = useRef();
   const nodeIdRef = useRef();
   const notifStartRef = useRef();
+  const notifRunningRef = useRef();
 
   // FxProvider value set as state in FxContext, tagged in index.js
   const {mFunc, setMFunc} = useContext(FxContext);
@@ -103,6 +106,11 @@ const App = () => {
       let netStat = state.isInternetReachable;
       setIsConnectedToNet(netStat);
       console.log('network state', netStat);
+
+      if(netStat)
+        setNotifStart(true);      // Start notification polling
+      else
+        setNotifStart(false);      // Stop notification polling due to loss of internet
     });
 
 	// assign functions to mFunc in FxContext, mFuncs are used in screens
@@ -152,10 +160,59 @@ const App = () => {
     notifStartRef.current = notifStart;
 
     // Start notification polling when connected to the internet
-    if(notifStartRef.current && isConnectedToNetRef.current)
+    if(notifStartRef.current && nodeIdRef.current != null && !notifRunningRef.current)
       getNotification(nodeIdRef.current);
+    else
+      console.log('getNotification() is not called');
 
-  }, [notifStart, isConnectedToNet]);
+  }, [notifStart, nodeId]);
+
+  useEffect(() => {
+    notifRunningRef.current = notifRunning;
+  }, [notifRunning]);
+
+
+  // Get notification from server
+  // Non-zero timeout are for the background notifications
+  const getNotification = (node_id, timeout = 0) => {
+    setNotifRunning(true);
+    console.log('Getting notification...');
+
+    // Initialized notification service
+    const notification = new NotificationService(function(notif){
+      console.log("NOTIF: ", notif);
+    });
+
+    // Create notification
+    let delay = 1000 * 60;        // 1 minute
+    let title = 'You\'ve been exposed';
+    pollServer(node_id, timeout)
+      .then(async (message) => {  
+        await notification.localNotification(title, message);       // Show notification
+        sendNotification(node_id);        // Send confirmation
+        saveNotif(message);       // Save the received notification message
+
+        if(timeout == 0)    // Calls function again after 1 minute
+          sleep(delay).then(() => getNotification(node_id));
+        
+        return;
+      })
+      .catch((err) => {
+        // Calls function again after 1 minute to re-attempt
+        // Must be connected to net to re-attempt
+        sleep(delay).then(() => {
+          if(timeout == 0 && isConnectedToNetRef.current)
+            getNotification(node_id);
+          else{
+            setNotifRunning(false);
+            console.warn('Notification is stopped');
+          }
+        });
+        
+        console.error(err);
+        return;
+      });
+  }
 
 
   // get device android ID
@@ -167,7 +224,6 @@ const App = () => {
           // set android id if available
           let node_id = (await MmkvStore.getStringAsync('node_id')) || null;
           setNodeId(node_id);
-          setNotifStart(true);      // Start notification polling when there's nodeID
           resolve();
 
         } catch (err) {
@@ -185,7 +241,6 @@ const App = () => {
 				          // store retrieved node_id
                   await MmkvStore.setStringAsync('node_id', node_id);
                   setNodeId(node_id);
-                  setNotifStart(true);      // Start notification polling when there's nodeID
                   resolve();
                 } catch (err) {
                   console.log('local storage cant update', err);
