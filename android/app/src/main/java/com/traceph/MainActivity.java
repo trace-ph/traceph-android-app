@@ -12,4 +12,10 @@ public class MainActivity extends ReactActivity {
   protected String getMainComponentName() {
     return "DetectPH";
   }
+
+
+  @Override
+  public void invokeDefaultOnBackPressed() {
+    moveTaskToBack(true);
+  }
 }
