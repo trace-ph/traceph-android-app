@@ -18,7 +18,7 @@ import QRscanner from './QRscanScreen';
 import inputToken from './inputTokenScreen';
 import reportVerdict from './reportVerdictScreen';
 import startReport from './startReportScreen';
-import showNotification from './showNotification';
+import showNotification from './showNotificationScreen';
 import exposedTutorial from './exposedScreen';
 import contactList from './contactsScreen';
 import aboutUsScreen from './aboutUsScreen';
