@@ -10,6 +10,12 @@ public class MainActivity extends ReactActivity {
    */
   @Override
   protected String getMainComponentName() {
-    return "TracePH";
+    return "DetectPH";
+  }
+
+
+  @Override
+  public void invokeDefaultOnBackPressed() {
+    moveTaskToBack(true);
   }
 }

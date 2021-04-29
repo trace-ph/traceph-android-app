@@ -1,15 +1,13 @@
 import React, {useContext} from 'react';
 import {
-  StyleSheet,
   StatusBar,
   Text,
   ScrollView,
   Image,
-  Linking,
   NativeModules,
 } from 'react-native';
+import styles from './Styles';
 
-const {ToastModule} = NativeModules;
 
 import {Button, Flex, WhiteSpace, WingBlank} from '@ant-design/react-native';
 
@@ -60,15 +58,11 @@ export default function AskBluScreen({navigation}) {
                   mFunc
                     .enableBluetooth()
                     .then(() => {
-                      navigation.navigate('Sharing');
+                      navigation.replace('Drawer');
                     })
                     .catch(err => console.log('err', err));
                 }}
-                style={{
-                  borderRadius: 30,
-                  width: '90%',
-                  backgroundColor: '#D63348',
-                }}
+                style={styles.redButton}
                 type="warning">
                 Okay! Got it.
               </Button>
@@ -79,29 +73,3 @@ export default function AskBluScreen({navigation}) {
     </>
   );
 }
-
-const styles = StyleSheet.create({
-  defaultFontSize: {
-    fontSize: 24,
-  },
-  baseText: {
-    fontFamily: 'Roboto',
-  },
-  headerText: {
-    textAlign: 'left',
-    width: '100%',
-    fontSize: 20,
-    marginBottom: 12,
-    fontWeight: 'bold',
-    color: '#666666',
-  },
-  desc: {
-    textAlign: 'center',
-    fontWeight: '100',
-    fontWeight: '100',
-    fontSize: 17,
-    lineHeight: 38,
-    color: '#808689',
-    //backgroundColor: '#808689',
-  },
-});

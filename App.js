@@ -6,9 +6,6 @@ import React, {
   useContext,
 } from 'react';
 
-import {NavigationContainer} from '@react-navigation/native';
-import {createStackNavigator} from '@react-navigation/stack';
-
 import {
   NativeEventEmitter,
   NativeModules,
@@ -23,18 +20,13 @@ import VIForegroundService from '@voximplant/react-native-foreground-service';
 import MMKV from 'react-native-mmkv-storage';
 import NetInfo from '@react-native-community/netinfo';
 
-import SharingScreen from './screens/sharingScreen';
-import GreetingScreen from './screens/greetingScreen';
-import AskBluScreen from './screens/askForBluetoothScreen';
-
 import FxContext from './FxContext';
 
 import uploadContact from './utilities/uploadContact';
 import registerDevice from './utilities/registerDevice';
 
-import {TextareaItem, WingBlank, Button} from '@ant-design/react-native';
-
-const Stack = createStackNavigator();
+// Compilation of all screens
+import Screens from './screens/Screens';
 
 var Buffer = require('buffer/').Buffer;
 
@@ -49,6 +41,10 @@ const bleManagerEmitter = new NativeEventEmitter(BleManagerModule);
 // to register event listers on BleModule.java
 const bleModuleEmitter = new NativeEventEmitter(BleModule);
 
+// Notification
+import NotificationService from './utilities/NotificationService';
+import { pollServer, sendNotification, saveNotif, sleep } from './utilities/getNotification';
+
 const App = () => {
   // declare state variables
   const [isBleSupported, setIsBleSupported] = useState(false);
@@ -59,8 +55,10 @@ const App = () => {
   // const [location, setLocation] = useState([]);
   const [isConnectedToNet, setIsConnectedToNet] = useState(false);
   const [nodeId, setNodeId] = useState(null);
+  const [notifStart, setNotifStart] = useState(false);    // Start expose notification polling
+  const [notifRunning, setNotifRunning] = useState(false);    // States if the getNotification function is already running
 
-  // decalre references that will store previous state values
+  // declare references that will store previous state values
   var intervalRef = useRef(null);
   const currentDiscoveredDevicesRef = useRef();
   const discoveryLogRef = useRef();
@@ -69,6 +67,8 @@ const App = () => {
   // const locationRef = useRef();
   const isConnectedToNetRef = useRef();
   const nodeIdRef = useRef();
+  const notifStartRef = useRef();
+  const notifRunningRef = useRef();
 
   // FxProvider value set as state in FxContext, tagged in index.js
   const {mFunc, setMFunc} = useContext(FxContext);
@@ -106,6 +106,11 @@ const App = () => {
       let netStat = state.isInternetReachable;
       setIsConnectedToNet(netStat);
       console.log('network state', netStat);
+
+      if(netStat)
+        setNotifStart(true);      // Start notification polling
+      else
+        setNotifStart(false);      // Stop notification polling due to loss of internet
     });
 
 	// assign functions to mFunc in FxContext, mFuncs are used in screens
@@ -150,20 +155,80 @@ const App = () => {
     nodeIdRef.current = nodeId;
   }, [nodeId]);
 
+  // For exposed notification
+  useEffect(() => {
+    notifStartRef.current = notifStart;
+
+    // Start notification polling when connected to the internet
+    if(notifStartRef.current && nodeIdRef.current != null && !notifRunningRef.current)
+      getNotification(nodeIdRef.current);
+    else
+      console.log('getNotification() is not called');
+
+  }, [notifStart, nodeId]);
+
+  useEffect(() => {
+    notifRunningRef.current = notifRunning;
+  }, [notifRunning]);
+
+
+  // Get notification from server
+  // Non-zero timeout are for the background notifications
+  const getNotification = (node_id, timeout = 0) => {
+    setNotifRunning(true);
+    console.log('Getting notification...');
+
+    // Initialized notification service
+    const notification = new NotificationService(function(notif){
+      console.log("NOTIF: ", notif);
+    });
+
+    // Create notification
+    let delay = 1000 * 60;        // 1 minute
+    let title = 'You\'ve been exposed';
+    pollServer(node_id, timeout)
+      .then(async (message) => {  
+        await notification.localNotification(title, message);       // Show notification
+        sendNotification(node_id);        // Send confirmation
+        saveNotif(message);       // Save the received notification message
+
+        if(timeout == 0)    // Calls function again after 1 minute
+          sleep(delay).then(() => getNotification(node_id));
+        
+        return;
+      })
+      .catch((err) => {
+        // Calls function again after 1 minute to re-attempt
+        // Must be connected to net to re-attempt
+        sleep(delay).then(() => {
+          if(timeout == 0 && isConnectedToNetRef.current)
+            getNotification(node_id);
+          else{
+            setNotifRunning(false);
+            console.warn('Notification is stopped');
+          }
+        });
+        
+        console.error(err);
+        return;
+      });
+  }
+
+
   // get device android ID
   const getNodeId = useCallback(
     () =>
       new Promise(async (resolve, reject) => {
         //CHECKOUT if node_id changes at reinstall, and so display the node_id on screen
         try {
-		  // set android id if available
-		  let node_id = (await MmkvStore.getStringAsync('node_id')) || null;
+          // set android id if available
+          let node_id = (await MmkvStore.getStringAsync('node_id')) || null;
           setNodeId(node_id);
           resolve();
 
         } catch (err) {
           console.log('node_id not found', err);
-		  // if err, register node id
+		      // if err, register node id
           if (isConnectedToNetRef.current) {
             let cancel = {exec: null};
             const regTOId = BackgroundTimer.setTimeout(() => {
@@ -173,7 +238,7 @@ const App = () => {
             registerDevice(cancel)	// gets androidId from device & inserts it to api.traceph.org
               .then(async node_id => {
                 try {
-				  // store retrieved node_id
+				          // store retrieved node_id
                   await MmkvStore.setStringAsync('node_id', node_id);
                   setNodeId(node_id);
                   resolve();
@@ -270,7 +335,7 @@ const App = () => {
 
     const notificationConfig = {
       id: 9811385,	// unique id
-      title: 'detectPH Active',
+      title: 'Recording contacts',
       text: 'The app is running in the background.',
       icon: 'ic_launcher_round',
     };
@@ -347,7 +412,7 @@ const App = () => {
               resolve();
             });
 
-		  // for each item in currentDiscovDevices, check if it's in recognizedDevices
+		      // for each item in currentDiscovDevices, check if it's in recognizedDevices
           // if not, add it to deviceToConnect if its data is empty (segregate)
           // else add it to recognizedDevices
           currentDiscoveredDevicesRef.current.forEach(async item => {
@@ -361,7 +426,7 @@ const App = () => {
             }
           });
 
-		  // connect to each segregated device, read characteristic data, then
+		      // connect to each segregated device, read characteristic data, then
           // finally update recognized devices
           for (let i = 0; i < deviceToConnect.length; i++) {
             let isConnected = false;
@@ -384,7 +449,7 @@ const App = () => {
                   id,
                   '0000ff01-0000-1000-8000-00805F9B34FB',		// serviceUUID
                   '0000ff01-0000-1000-8000-00805F9B34FB',		// characUUID
-				  // UUID's are declared and used in BleModule.java
+				          // UUID's are declared and used in BleModule.java
                 )
                   .then(readData => {	// when data is read, add as recog device
                     var buffer = Buffer.from(readData);
@@ -645,20 +710,7 @@ const App = () => {
 
   return (
     <React.Fragment>
-      {/* <WingBlank>
-        <TextareaItem
-          rows={8}
-          placeholder="discovery logs"
-          value={dataForDisplay}
-        />
-      </WingBlank> */}
-      <NavigationContainer>
-        <Stack.Navigator initialRouteName="Greet" headerMode="none">
-          <Stack.Screen name="Greet" component={GreetingScreen} />
-          <Stack.Screen name="askForBluetooth" component={AskBluScreen} />
-          <Stack.Screen name="Sharing" component={SharingScreen} />
-        </Stack.Navigator>
-      </NavigationContainer>
+      <Screens />
     </React.Fragment>
   );
 };

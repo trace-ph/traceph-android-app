@@ -1,21 +1,16 @@
 import React, {useContext, useState} from 'react';
 import {
-  StyleSheet,
   StatusBar,
   Text,
   ScrollView,
-  Image,
-  Linking,
-  NativeModules,
 } from 'react-native';
-
-const {ToastModule} = NativeModules;
 
 import {Button, Flex, WhiteSpace, WingBlank} from '@ant-design/react-native';
 
 import FxContext from '../FxContext';
 
 import Header from '../assets/potterHeader.svg';
+import styles from './Styles';
 
 const B = props => <Text style={{fontWeight: 'bold'}}>{props.children}</Text>;
 
@@ -60,22 +55,18 @@ export default function GreetingScreen({navigation}) {
                       mFunc
                         .enableBluetooth()
                         .then(() => {
-                          navigation.navigate('Sharing');
+                          navigation.replace('Drawer');
                         })
                         .catch(err => {
                           console.log('err', err);
-                          navigation.navigate('askForBluetooth');
+                          navigation.replace('askForBluetooth');
                         });
                     })
                     .catch(() => {
                       setIsLoading(false);
                     });
                 }}
-                style={{
-                  borderRadius: 30,
-                  width: '90%',
-                  backgroundColor: '#D63348',
-                }}
+                style={styles.redButton}
                 type="warning"
                 loading={isLoading}
                 disabled={isLoading}>
@@ -90,29 +81,3 @@ export default function GreetingScreen({navigation}) {
     </>
   );
 }
-
-const styles = StyleSheet.create({
-  defaultFontSize: {
-    fontSize: 24,
-  },
-  baseText: {
-    fontFamily: 'Roboto',
-  },
-  headerText: {
-    textAlign: 'left',
-    width: '100%',
-    fontSize: 34,
-    marginBottom: 12,
-    fontWeight: 'bold',
-    color: '#666666',
-  },
-  desc: {
-    textAlign: 'left',
-    fontWeight: '100',
-    fontWeight: '100',
-    fontSize: 17,
-    lineHeight: 45,
-    color: '#808689',
-    //backgroundColor: '#808689',
-  },
-});
