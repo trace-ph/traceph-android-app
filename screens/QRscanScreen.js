@@ -29,7 +29,7 @@ export default class QRscanner extends React.Component {
         console.log(e.data);
 
         // Send the data to auth-api
-		const authURL = API_URL + '/qr/auth';
+		const authURL = API_URL + '/report/auth';
 		const {mFunc, setMFunc} = this.context;
         Axios.get(authURL,
             { params: {     // Parameters to send

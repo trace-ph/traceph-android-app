@@ -25,23 +25,19 @@ import { API_URL } from '../configs';
 
 // Checks the input token
 // Returns verdict message
-async function tokenCheck(data, token, input, node_id){
-  if(token == input){
-  	const reportURL = API_URL + '/qr/report';
-    let verdict = await Axios.get(reportURL,
-      { params: {     // Parameters to send
-        node_id: node_id,
-        data: data,
-        token: input,
-    }})
-    // .then((res) => console.log(res))
-    .catch((err) => console.error(err));
+async function tokenCheck(data, input, node_id){
+  const reportURL = API_URL + '/report';
+  let verdict = await Axios.get(reportURL,
+    { params: {     // Parameters to send
+      node_id: node_id,
+      data: data,
+      token: input,
+  }})
+  // .then((res) => console.log(res))
+  .catch((err) => console.error(err));
 
-    // return verdict.body;
-    return verdict.data;
-
-  } else
-    return 'Wrong input code';
+  // return verdict.body;
+  return verdict.data;
 }
 
 
@@ -107,7 +103,7 @@ export default function inputToken( {route, navigation} ) {
           }
 
           // Get verdict
-          let verdict = await tokenCheck(data, token, value, mFunc.nodeIdRef.current);
+          let verdict = await tokenCheck(data, value, mFunc.nodeIdRef.current);
           // ToastModule.showToast(verdict);
 
           navigation.replace('reportVerdict', { result: verdict });
