@@ -25,18 +25,17 @@ import { API_URL } from '../configs';
 
 // Checks the input token
 // Returns verdict message
-async function tokenCheck(data, input, node_id){
+async function tokenCheck(data, input, node_id, patient_info){
   const reportURL = API_URL + '/report';
-  let verdict = await Axios.get(reportURL,
-    { params: {     // Parameters to send
-      node_id: node_id,
-      data: data,
-      token: input,
-  }})
+  let verdict = await Axios.post(reportURL,{
+    node_id: node_id,
+    patient_info: patient_info,
+    data: data,
+    token: input,
+  })
   // .then((res) => console.log(res))
   .catch((err) => console.error(err));
 
-  // return verdict.body;
   return verdict.data;
 }
 
@@ -44,7 +43,13 @@ async function tokenCheck(data, input, node_id){
 export default function inputToken( {route, navigation} ) {
   // Get the parameters and context
   const { data, token } = route.params;
+	const { test_result, test_result_date, reference_date } = route.params;
   const { mFunc, setMFunc } = useContext(FxContext);
+  const patient_info = {
+    test_result: test_result,
+    test_result_date: test_result_date,
+    reference_date: reference_date,
+  };
 
   // Code field parameters
   const CELL_COUNT = 6;
@@ -103,7 +108,7 @@ export default function inputToken( {route, navigation} ) {
           }
 
           // Get verdict
-          let verdict = await tokenCheck(data, value, mFunc.nodeIdRef.current);
+          let verdict = await tokenCheck(data, value, mFunc.nodeIdRef.current, patient_info);
           // ToastModule.showToast(verdict);
 
           navigation.replace('reportVerdict', { result: verdict });

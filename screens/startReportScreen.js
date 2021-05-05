@@ -25,7 +25,7 @@ export default function startReport( {navigation} ) {
 
     <Button
     onPress={() => {
-      navigation.navigate('QRscanner');
+      navigation.navigate('inputResults');
     }}
     style={styles.redButton}
     >

@@ -4,8 +4,6 @@ import {
   NativeModules,
 } from 'react-native';
 
-const { ToastModule } = NativeModules;
-
 import FxContext from '../FxContext';
 
 // For the QR code scanner camera
@@ -19,8 +17,8 @@ import { API_URL } from '../configs';
 export default class QRscanner extends React.Component {
 	static contextType = FxContext;
 
-    constructor() {
-        super();
+    constructor(props) {
+        super(props);
     }
 
     // When QR code is scanned, send data to auth-api
@@ -40,12 +38,14 @@ export default class QRscanner extends React.Component {
         .then((res) => {
             // console.log(res)
             // Go to Token input screen when successful
-            ToastModule.showToast(res.data.toString());        // Shows token through Toast
-
+            const { test_result, test_result_date, reference_date } = this.props.route.params;
             this.props.navigation.replace('inputToken',
             {     // Parameters to send
                 data: e.data,
-                token: res.data,          // Token
+                token: res.data,
+                test_result: test_result,
+                test_result_date: test_result_date,
+                reference_date: reference_date,
             });
         })
 
