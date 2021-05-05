@@ -81,7 +81,7 @@ export default function inputResults( {route, navigation} ) {
 
 
 function formatDate(createdDate){
-	let m = createdDate.getMonth();
+	let m = createdDate.getMonth() + 1;
 	let d = createdDate.getDate();
 	let y = createdDate.getFullYear();
   if(m < 10 && d < 10)
@@ -93,9 +93,3 @@ function formatDate(createdDate){
   else
     return date = y + '-' + m + '-' + d;
 }
-
-/*
-Code References:
-> Datepicker
-  https://www.npmjs.com/package/react-datetime
-*/
