@@ -9,9 +9,7 @@ import FxContext from '../FxContext';
 // For the QR code scanner camera
 import QRCodeScanner from 'react-native-qrcode-scanner';
 
-// For sending info via HTTP
-import Axios from 'axios';
-import { API_URL } from '../configs';
+import { getToken } from '../apis/report';
 
 
 export default class QRscanner extends React.Component {
@@ -26,21 +24,13 @@ export default class QRscanner extends React.Component {
         // Show in the Metro server log
         console.log(e.data);
 
-        // Send the data to auth-api
-		const authURL = API_URL + '/report/auth';
+        // Send the data
 		const {mFunc, setMFunc} = this.context;
-        Axios.get(authURL,
-            { params: {     // Parameters to send
-                node_id: mFunc.nodeIdRef.current,
-                data: e.data
-            }})
-
+        getToken(mFunc.nodeIdRef.current, e.data)
         .then((res) => {
-            // console.log(res)
             // Go to Token input screen when successful
             const { test_result, test_result_date, reference_date } = this.props.route.params;
-            this.props.navigation.replace('inputToken',
-            {     // Parameters to send
+            this.props.navigation.replace('inputToken', {
                 data: e.data,
                 token: res.data,
                 test_result: test_result,

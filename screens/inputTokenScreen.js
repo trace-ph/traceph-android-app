@@ -18,26 +18,7 @@ import {Button, Flex, WhiteSpace, WingBlank} from '@ant-design/react-native';
 import { CodeField, Cursor, useBlurOnFulfill, useClearByFocusCell } from
 'react-native-confirmation-code-field';
 
-// For sending info via HTTP
-import Axios from 'axios';
-import { API_URL } from '../configs';
-
-
-// Checks the input token
-// Returns verdict message
-async function tokenCheck(data, input, node_id, patient_info){
-  const reportURL = API_URL + '/report';
-  let verdict = await Axios.post(reportURL,{
-    node_id: node_id,
-    patient_info: patient_info,
-    data: data,
-    token: input,
-  })
-  // .then((res) => console.log(res))
-  .catch((err) => console.error(err));
-
-  return verdict.data;
-}
+import { sendReport } from '../apis/report';
 
 
 export default function inputToken( {route, navigation} ) {
@@ -64,9 +45,9 @@ export default function inputToken( {route, navigation} ) {
 	const [showAlert, setShowAlert] = useState(true);
 	if(showAlert)
 		Alert.alert(
-			'Authorization code',
-			JSON.stringify(token),
-			[{ text: 'OK', onPress: () => setShowAlert(false)}],
+			'Authorization code', 
+			JSON.stringify(token), 
+			[{ text: 'OK', onPress: () => setShowAlert(false)}], 
 			{ cancelable: false }
 		);
 
@@ -108,7 +89,7 @@ export default function inputToken( {route, navigation} ) {
           }
 
           // Get verdict
-          let verdict = await tokenCheck(data, value, mFunc.nodeIdRef.current, patient_info);
+          let verdict = await sendReport(data, value, mFunc.nodeIdRef.current, patient_info);
           // ToastModule.showToast(verdict);
 
           navigation.replace('reportVerdict', { result: verdict });
