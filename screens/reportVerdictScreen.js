@@ -39,7 +39,7 @@ export default function reportVerdict( {route, navigation} ) {
       </Text>
 
       <Button
-      onPress={() => navigation.pop()}    // Pop current screen from stack
+      onPress={() => navigation.popToTop()}    // Pop to the startReport screen from stack
       style={styles.redButton}
       > 
       Ok
