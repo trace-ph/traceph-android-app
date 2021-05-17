@@ -2,10 +2,9 @@ import React, {useContext, useState} from 'react';
 import {
   Text,
   View,
+  Modal,
 } from 'react-native';
 import styles from './Styles';
-
-// const {ToastModule} = NativeModules;
 
 import {Button, Flex, WhiteSpace, WingBlank} from '@ant-design/react-native';
 
@@ -15,6 +14,7 @@ export default function reportVerdict( {route, navigation} ) {
   // Get the parameters
   const { result } = route.params;
   let verdict = '';
+	const [showPopUp, setShowPopUp] = useState(true);
 
   // Verdict text
   if(result == 'scan')
@@ -30,21 +30,34 @@ export default function reportVerdict( {route, navigation} ) {
 
 
   return (
-    <View style={{flex:1}}>
-      <Text style={styles.headerText}>
-        Report verdict:
-      </Text>
-      <Text style={styles.desc}>
-        {verdict}
-      </Text>
+    <View style={styles.defaultView}>
+      {/* Pop-up code */}
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={showPopUp}
+        onRequestClose={() => console.log('Confirmation is closed')}
+      >
+        <View style={[styles.container, styles.dimBG]}>
+          <View style={styles.popUp}>
+            <Text style={styles.headerText}>
+              Report verdict:
+            </Text>
+            <Text style={[styles.desc, { textAlign: 'center' }]}>
+              {verdict}
+            </Text>
+            <WhiteSpace size="xl" />
 
-      <Button
-      onPress={() => navigation.popToTop()}    // Pop to the startReport screen from stack
-      style={styles.redButton}
-      > 
-      Ok
-      </Button>
-      
+            <Button
+              onPress={() => navigation.popToTop()}    // Pop to the startReport screen from stack
+              style={styles.redButton}
+              type="warning"
+            > 
+            Ok
+            </Button>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }

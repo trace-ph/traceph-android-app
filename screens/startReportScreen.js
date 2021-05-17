@@ -10,28 +10,37 @@ import styles from './Styles';
 import {Button, Flex, WhiteSpace, WingBlank} from '@ant-design/react-native';
 const B = props => <Text style={{fontWeight: 'bold'}}>{props.children}</Text>;
 
+import Header from '../assets/header.svg';
 
 export default function startReport( {navigation} ) {
 
   return (
-    <View style={{flex:1}}>
-    <Text style={styles.headerText}>
-      Implications of reporting
-    </Text>
-    <Text style={styles.desc}>
-        <B>Remember:</B> You're only reporting for yourself and <B>not</B> on behalf of others. Reporting on behalf of others does not help.
-    </Text>
-    <WhiteSpace size="lg" />
+    <View style={styles.defaultView}>
+      <WingBlank size="lg">
+				<WhiteSpace size="xl" />
+				<WhiteSpace size="xl" />
+        <Header width={'100%'} />
+				<WhiteSpace size="xl" />
+        <Text style={styles.headerText}>
+          Implications of reporting
+        </Text>
+        <Text style={styles.desc}>
+          To make a report, point the camera to the DetectPH QR code found in your lab test result. You can only report once per day.
+          {"\n\n"}
+          <B>Remember:</B> You're only reporting for yourself and <B>not</B> on behalf of others.
+        </Text>
+        <WhiteSpace size="xl" />
 
-    <Button
-    onPress={() => {
-      navigation.navigate('inputResults');
-    }}
-    style={styles.redButton}
-    >
-    Report
-    </Button>
-
+        <Button
+        onPress={() => {
+          navigation.navigate('inputResults');
+        }}
+        type="warning"
+        style={styles.redButton}
+        >
+        I understand!
+        </Button>
+      </WingBlank>
     </View>
   );
 }

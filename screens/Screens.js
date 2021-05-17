@@ -19,10 +19,8 @@ import inputToken from './inputTokenScreen';
 import reportVerdict from './reportVerdictScreen';
 import startReport from './startReportScreen';
 import inputResults from './inputResultsScreen';
-import confirmResults from './confirmResultsScreen';
 import showNotification from './showNotificationScreen';
 import exposedTutorial from './exposedScreen';
-import contactList from './contactsScreen';
 import aboutUsScreen from './aboutUsScreen';
 
 const Stack = createStackNavigator();
@@ -44,7 +42,6 @@ const ReportNavigator = () => {
 		<Stack.Navigator initialRouteName="home" headerMode="none">
 			<Stack.Screen name="home" component={startReport} />
 			<Stack.Screen name="inputResults" component={inputResults} />
-			<Stack.Screen name="confirmResults" component={confirmResults} />
 			<Stack.Screen name="QRscanner" component={QRscanner} />
 			<Stack.Screen name="inputToken" component={inputToken} />
 			<Stack.Screen name="reportVerdict" component={reportVerdict} />
@@ -59,7 +56,6 @@ const DrawerNavigator = () => {
 			<Drawer.Screen name="Report" component={ReportNavigator} />
 			<Drawer.Screen name="Received notifications" component={showNotification} />
 			<Drawer.Screen name="When exposed" component={exposedTutorial} />
-			<Drawer.Screen name="Contact list" component={contactList} />
 			<Drawer.Screen name="About Us" component={aboutUsScreen} />
 		</Drawer.Navigator>
 	);

@@ -13,20 +13,13 @@ import styles from './Styles';
 const {ToastModule} = NativeModules;
 
 import {Button, Flex, WhiteSpace, WingBlank} from '@ant-design/react-native';
+const B = props => <Text style={{fontWeight: 'bold'}}>{props.children}</Text>;
+const L = props => <Text style={styles.link} onPress={() => Linking.openURL(props.children)}>{props.children}</Text>;
+const C = props => <Text style={styles.copy} onPress={() => { Clipboard.setString(props.children); ToastModule.showToast("Copied " + props.children);}}>{props.children}</Text>;
 
-import FxContext from '../FxContext';
-
-import Header from '../assets/header.svg';
-const qrImg = require('../assets/qr.png');
-
-const copyToClipboard = () => {
-  Clipboard.setString('https://endcov.ph/');
-  ToastModule.showToast('Copied to Clipboard');
-};
+const DPH_icon = require('../assets/DetectPH_transparent.png');
 
 export default function aboutUsScreen({navigation}) {
-  const {mFunc, setMFunc} = useContext(FxContext);
-
   return (
     <>
       <React.Fragment>
@@ -34,49 +27,32 @@ export default function aboutUsScreen({navigation}) {
         <ScrollView style={{backgroundColor: '#FFFFFF'}}>
           <WingBlank size="lg">
             <Flex direction="column" align="center" style={{marginTop: '10%'}}>
-              <Header width={'100%'} />
-              <WhiteSpace size="sm" />
-              <Text style={styles.headerText}>We want you to be informed.</Text>
-              <WingBlank size="lg">
-                <Text style={styles.desc}>
-                  Whenever we confirmed that someone you have encountered has
-                  been tested positive for COVID-19, we will give you a
-                  notification.
-                </Text>
-              </WingBlank>
-              <WhiteSpace size="lg" />
-              <Text style={styles.desc}>You may also share through:</Text>
-              <WhiteSpace size="sm" />
-              <Text
-                style={styles.link}
-                onPress={() => Linking.openURL('https://endcov.ph/')}>
-                https://endcov.ph/
-              </Text>
-              <WhiteSpace size="lg" />
-              <WhiteSpace size="sm" />
-              <Button
-                onPress={() => {
-                  copyToClipboard();
-                }}
-                style={styles.redButton}
-                type="warning">
-                Copy Link to Share
-              </Button>
-              <WhiteSpace size="lg" />
-              <Text style={styles.desc}>
-                or you can let your friends or family
-              </Text>
-              <Text style={styles.desc}>scan the QR code below</Text>
               <Image
-                source={qrImg}
+                source={DPH_icon}
                 style={{
-                  width: 250,
-                  height: 250,
-                  marginTop: 20,
+                  width: 100,
+                  height: 100,
                 }}
               />
-              <WhiteSpace size="lg" />
-              <WhiteSpace size="lg" />
+              <WhiteSpace size="sm" />
+              <Text style={styles.headerText}>DetectPH</Text>
+              <WingBlank size="lg">
+                <Text style={styles.desc}>
+                DetectPH is a mobile app that automates the contact-tracing process. Our goal is to inform people of their exposure as quickly as possible. Using your phone's Bluetooth, it keeps records of DetectPH users near you. Whenever you're connected to the internet, these records will be uploaded to our database as your possible contacts.
+                </Text>
+                <WhiteSpace size="lg" />
+
+                <Text style={styles.desc}>
+                <B>Received a positive COVID result?</B> Report it in-app and we'll notify those we determined as your close contacts for you. We'll keep your identity a secret; Your close contacts will only know they're exposed.
+                </Text>
+                <WhiteSpace size="lg" />
+                
+                <Text style={styles.desc}>
+                If you have any concerns, please email us through <C>detectph.updsc@gmail.com</C> with the subject <B>"DetectPH Concern"</B>.
+                </Text>
+                <WhiteSpace size="xl" />
+                <WhiteSpace size="xl" />
+              </WingBlank>
             </Flex>
           </WingBlank>
         </ScrollView>

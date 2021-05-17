@@ -2,6 +2,7 @@ import React, {useContext, useState} from 'react';
 import {
   Text,
   View,
+  Modal,
 } from 'react-native'; 
 import styles from './Styles';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -18,63 +19,106 @@ export default function inputResults( {route, navigation} ) {
   const [covidResult, setCovidResult] = useState(false);
   const [pickTestDate, setPickTestDate] = useState(false);
   const [pickResultDate, setPickResultDate] = useState(false);
+	const [showPopUp, setShowPopUp] = useState(false);
 
   return (
-    <View style={{flex:1}}>  
-      <List>
+    <View style={styles.defaultView}>  
+      <WingBlank size="lg">
+        <WhiteSpace size="xl" />
+        <Text style={styles.headerText}>Lab test results</Text>
+        <Text style={styles.desc}><B>Input the needed information.</B></Text>
+        <WhiteSpace size="xl" />
+
+        <List>
+          <Text style={styles.desc}>When did you get tested?</Text>
           <List.Item 
             extra={formatDate(testDate)}
             onClick={() => setPickTestDate(true)}
             wrap
-          >
-            When did you get tested?
-          </List.Item>
+          />
+
+          <Text style={styles.desc}>When did you received your lab results?</Text>
           <List.Item 
             extra={formatDate(resultDate)}
             onClick={() => setPickResultDate(true)}
             wrap
-          >
-            When did you received your lab results?
-          </List.Item>
+          />
+
+          <Text style={styles.desc}>Are you COVID-positive?</Text>
           <List.Item>
             <Checkbox
               value={covidResult}
               onChange={() => setCovidResult(!covidResult)}
             />
-            Are you COVID-positive?
           </List.Item>
-      </List>
+        </List>
 
-      {(pickTestDate || pickResultDate) && <DateTimePicker 
-        value={pickTestDate ? testDate : resultDate}
-        mode='date'
-        display='calendar'
-        maximumDate={new Date()}
-        onChange={(event, date) => {
-          if(event.type == 'dismissed')
-            return;
-
-          if(pickTestDate){
-            setTestDate(date);
-            setPickTestDate(false);
-          } else {
-            setResultDate(date);
+        {(pickTestDate || pickResultDate) && <DateTimePicker 
+          value={pickTestDate ? testDate : resultDate}
+          mode='date'
+          display='calendar'
+          maximumDate={new Date()}
+          onChange={(event, date) => {
             setPickResultDate(false);
-          }
-        }}
-      />}
+            setPickTestDate(false);
 
-      <WhiteSpace size="xl" />
-      <Button
-      onPress={() => navigation.navigate('confirmResults', {
-          test_result: covidResult,
-          test_result_date: formatDate(resultDate),
-          reference_date: formatDate(testDate),
-      })}
-      style={styles.redButton}
-      > 
-      Submit
-      </Button>
+            if(event.type == 'dismissed')
+              return;
+
+            if(pickTestDate)
+              setTestDate(date);
+            else
+              setResultDate(date);
+          }}
+        />}
+
+        <WhiteSpace size="xl" />
+        <Button
+          onPress={() => setShowPopUp(true)}
+          style={styles.redButton}
+          type="warning"
+        > 
+        Submit
+        </Button>
+      </WingBlank>
+
+      {/* Pop-up code */}
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={showPopUp}
+        onRequestClose={() => console.log('Confirmation is closed')}
+      >
+        <View style={[styles.container, styles.dimBG]}>
+          <View style={styles.popUp}>
+          <Text style={styles.headerText}>Are these correct?</Text>
+          <Text style={styles.desc}><B>Testing date:</B> {formatDate(testDate)}</Text>
+          <Text style={styles.desc}><B>Received result date:</B> {formatDate(resultDate)}</Text>
+          <Text style={styles.desc}><B>COVID result:</B> {covidResult ? 'Positive' : 'Negative'}</Text>
+          <WhiteSpace size="sm" />
+          <Button
+            onPress={() => setShowPopUp(false)}
+            style={styles.whiteButton}
+          >
+            Go back
+          </Button>
+          <Button
+            onPress={() => {
+              setShowPopUp(false);
+              navigation.navigate('QRscanner', {
+                test_result: covidResult,
+                test_result_date: formatDate(resultDate),
+                reference_date: formatDate(testDate),
+              });
+            }}
+            style={styles.redButton}
+            type="warning"
+          >
+            Confirm
+          </Button>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }

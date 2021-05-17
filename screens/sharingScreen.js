@@ -72,8 +72,13 @@ export default function SharingScreen({navigation}) {
               <WhiteSpace size="sm" />
               <Text style={styles.headerText}>We want you to be informed.</Text>
               <WingBlank size="lg">
-                <Text style={styles.desc}>
+                <Text style={[styles.desc, { textAlign: 'center' }]}>
                   Let this app run in the background.
+                </Text>
+                <Text style={styles.desc}>
+                  Whenever we confirmed that someone you have encountered has
+                  been tested positive for COVID-19, we will give you a
+                  notification.
                 </Text>
               </WingBlank>
               <WhiteSpace size="lg" />
