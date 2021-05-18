@@ -235,7 +235,7 @@ const App = () => {
               cancel.exec();
             }, 180000);
 
-            registerDevice(cancel)	// gets androidId from device & inserts it to api.traceph.org
+            registerDevice(cancel)	// gets androidId from device & inserts it to the database
               .then(async node_id => {
                 try {
 				          // store retrieved node_id
@@ -278,8 +278,30 @@ const App = () => {
   const enableBluetooth = useCallback(
     () =>
       new Promise((resolve, reject) => {
-		// acquire permission
-        if (Platform.OS === 'android' && Platform.Version >= 23) {
+		    // Acquire permission
+        // Android API >= 29 requires FINE_LOCATION while Android API >= 23 requires COARSE_LOCATION
+        // @see https://github.com/innoveit/react-native-ble-manager/blob/master/README.md#install
+        if (Platform.OS === 'android' && Platform.Version >= 29) {
+          PermissionsAndroid.check(
+            PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+          ).then(result => {
+            if (result) {
+              console.log('Android Permission is OK');
+            } else {
+              PermissionsAndroid.request(
+                PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+              ).then(result => {
+                if (result) {
+                  console.log('User accept');
+                } else {
+                  console.log('User refuse');
+                  reject();
+                }
+              });
+            }
+          });
+        }
+        else if (Platform.OS === 'android' && Platform.Version >= 23) {
           PermissionsAndroid.check(
             PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION,
           ).then(result => {
@@ -440,9 +462,9 @@ const App = () => {
               .then(() => {
                 return BleManager.retrieveServices(id);
               })
-              .then(info => {
-                //console.log('Retrieved services of peripheral: ', id, info);
-              })
+              // .then(info => {
+              //   console.log('Retrieved services of peripheral: ', id, info);
+              // })
               .then(async () => {
                 //console.log('reading data from ', id);
                 await BleManager.read(
@@ -546,12 +568,12 @@ const App = () => {
             console.log('local storage cant update', err);
           }
 
-		  // end of commands for one 7sec interval, clear arrays
+		  // end of commands for one 3sec interval, clear arrays
           console.log('ending a run');
           setCurrentDiscoveredDevices([]);
           setDiscoveryLog([]);
           startScan(true);
-        }, 7000);
+        }, 3000);
 
         if (intervalRef.current) {
           console.log('timer started');
@@ -651,7 +673,7 @@ const App = () => {
           rssi: peripheral.rssi,
           time: timeStamp,
         });
-        console.log(peripheral.id, serviceData, timeStamp);
+        // console.log(peripheral.id, serviceData, timeStamp);
         return temp_currArr;
       });
 
