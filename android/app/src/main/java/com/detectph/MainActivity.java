@@ -1,4 +1,4 @@
-package com.traceph;
+package com.detectph;
 
 import com.facebook.react.ReactActivity;
 

@@ -129,11 +129,11 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.traceph"
+        applicationId "com.detectph"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        versionCode 2
+        versionName "2"
         missingDimensionStrategy 'react-native-camera', 'general'
     }
     splits {
@@ -216,7 +216,7 @@ dependencies {
     }
 
     if (enableHermes) {
-        def hermesPath = "../../node_modules/hermes-engine/android/";
+        def hermesPath = "../../node_modules/hermes-engine/android/"
         debugImplementation files(hermesPath + "hermes-debug.aar")
         releaseImplementation files(hermesPath + "hermes-release.aar")
     } else {
