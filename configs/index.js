@@ -1,1 +1,1 @@
-export const API_URL = 'https://api.traceph.org/api/';
+export const API_URL = 'http://www.detectph.com/api';
