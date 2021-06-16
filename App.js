@@ -202,7 +202,7 @@ const App = () => {
         // Must be connected to net to re-attempt
         sleep(delay).then(() => {
           if(timeout == 0 && isConnectedToNetRef.current)
-            getNotification(node_id);
+            sleep(delay).then(() => getNotification(node_id));
           else{
             setNotifRunning(false);
             console.warn('Notification is stopped');
@@ -226,7 +226,7 @@ const App = () => {
         resolve();
 
       } catch (err) {
-        console.log('node_id not found', err);
+        console.warn('node_id not found', err);
         // if err, register node id
         if (isConnectedToNetRef.current) {
           let cancel = {exec: null};
@@ -242,12 +242,12 @@ const App = () => {
                 setNodeId(node_id);
                 resolve();
               } catch (err) {
-                console.log('local storage cant update', err);
+                console.error('local storage cant update', err);
                 reject();
               }
             })
             .catch(err => {
-              console.log('registering error', err);
+              console.error('registering error', err);
               ToastModule.showToast('Could not register your device. Try again.');
               reject();
             })
@@ -490,7 +490,7 @@ const App = () => {
         try {
           // get storage if it exists, or empty array
           localStorage = (await MmkvStore.getArrayAsync('discLogs')) || [];
-          console.log('localStorage', localStorage);
+          // console.log('localStorage', localStorage);
           let mtext = JSON.stringify(localStorage);
           setDataForDisplay(mtext);
         } catch (err) {
@@ -505,9 +505,12 @@ const App = () => {
           function checkIfOnRecognized(obj) {
             return obj.id === val.id;
           }
+          function checkIfDuplicate(obj){
+            return obj.node_pair == temp_recognizedDevices[recogDevIndex].data && obj.timestamp == val.time
+          }
 
           let recogDevIndex = temp_recognizedDevices.findIndex(checkIfOnRecognized,);
-          if (recogDevIndex >= 0) {		//collect contact info to upload
+          if (recogDevIndex >= 0 && !localStorage.some(checkIfDuplicate)) {		//collect contact info to upload
             let contact = {
               type: 'direct-bluetooth',
               timestamp: val.time,
@@ -520,6 +523,7 @@ const App = () => {
             localStorage.push(contact);
           }
         });
+        console.log('localStorage ', localStorage);
 
         // if there's internet, upload contact (POST)
         if (isConnectedToNetRef.current && localStorage.length !== 0) {

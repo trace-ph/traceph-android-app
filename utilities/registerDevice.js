@@ -22,10 +22,10 @@ const getNodeId = (device_id, device_model, cancel, resolve, reject) => {
     })
     .catch(err => {
       if (err.response) {
-        console.log('get node id failed.', err.response.status);
-        console.log(err.response.data);
+        console.error('get node id failed.', err.response.status);
+        console.error(err.response.data);
       }
-      console.log('insert err', err);
-      reject();
+      console.error('insert err', err);
+      reject(err);
     });
 };

@@ -28,7 +28,7 @@ export default function showNotification(){
 	
 	return(
 		<View style={styles.defaultView}>
-			<WingBlank size="lg">
+			<WingBlank size="lg" style={{paddingHorizontal: '5%'}}>
 				<WhiteSpace size="xl" />
 				<Text style={styles.headerText}>
 					Received notification

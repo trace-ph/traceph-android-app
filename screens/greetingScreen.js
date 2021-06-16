@@ -28,43 +28,35 @@ export default function GreetingScreen({navigation}) {
               <Header width={'100%'} />
               <WhiteSpace size="lg" />
               <Text style={styles.desc}>
-                detectPH would like to ask for your consent in sending
-                information of encounters with you if they have been confirmed
-                positive or PUI (Person Under Investigation) of COVID-19.
+                DetectPH would like to ask for your consent in sending information of encounters with you if they have been confirmed positive of COVID-19.
               </Text>
               <WhiteSpace size="lg" />
               <WhiteSpace size="sm" />
+
               <Text style={styles.desc}>
-                To do this, we will need your help to turn on your
-                <B> device bluetooth.</B>
+                To do this, we will need your help to turn on your <B>device bluetooth and location.</B>
               </Text>
               <WhiteSpace size="lg" />
+
               <Text style={styles.desc}>
-                detectPH exchanges Bluetooth signals with nearby mobile phones
-                which runs the same app.
+                DetectPH exchanges Bluetooth signals with nearby mobile phones which runs the same app. 
               </Text>
               <WhiteSpace size="lg" />
               <WhiteSpace size="sm" />
               <Button
                 onPress={() => {
                   setIsLoading(true);
-                  mFunc
-                    .getNodeId()
+                  mFunc.getNodeId()
                     .then(() => {
                       setIsLoading(false);
-                      mFunc
-                        .enableBluetooth()
-                        .then(() => {
-                          navigation.replace('Drawer');
-                        })
+                      mFunc.enableBluetooth()
+                        .then(() => navigation.replace('Drawer'))
                         .catch(err => {
                           console.log('err', err);
                           navigation.replace('askForBluetooth');
                         });
                     })
-                    .catch(() => {
-                      setIsLoading(false);
-                    });
+                    .catch(() => setIsLoading(false));
                 }}
                 style={styles.redButton}
                 type="warning"

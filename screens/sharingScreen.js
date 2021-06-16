@@ -66,7 +66,7 @@ export default function SharingScreen({navigation}) {
       <React.Fragment>
         <StatusBar barStyle="dark-content" backgroundColor="white" />
         <ScrollView style={{backgroundColor: '#FFFFFF'}}>
-          <WingBlank size="lg">
+          <WingBlank size="lg" style={{paddingHorizontal: '5%'}}>
             <Flex direction="column" align="center" style={{marginTop: '10%'}}>
               <Header width={'100%'} />
               <WhiteSpace size="sm" />
@@ -76,9 +76,12 @@ export default function SharingScreen({navigation}) {
                   Let this app run in the background.
                 </Text>
                 <Text style={styles.desc}>
-                  Whenever we confirmed that someone you have encountered has
-                  been tested positive for COVID-19, we will give you a
-                  notification.
+                  Whenever we confirmed that someone you have encountered has been tested positive for COVID-19, we will give you notification.
+                </Text>
+                <WhiteSpace size="sm" />
+
+                <Text style={styles.desc}>
+                  Swipe from left to right to open the menu.
                 </Text>
               </WingBlank>
               <WhiteSpace size="lg" />

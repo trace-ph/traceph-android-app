@@ -1,6 +1,7 @@
 import React, {useContext, useState} from 'react';
 import {
   Text,
+  Image,
   View,
 } from 'react-native';
 import styles from './Styles';
@@ -10,17 +11,23 @@ import styles from './Styles';
 import {Button, Flex, WhiteSpace, WingBlank} from '@ant-design/react-native';
 const B = props => <Text style={{fontWeight: 'bold'}}>{props.children}</Text>;
 
-import Header from '../assets/header.svg';
+const Header = require('../assets/report.png');
 
 export default function startReport( {navigation} ) {
 
   return (
     <View style={styles.defaultView}>
-      <WingBlank size="lg">
-				<WhiteSpace size="xl" />
-				<WhiteSpace size="xl" />
-        <Header width={'100%'} />
-				<WhiteSpace size="xl" />
+      <WhiteSpace size="xl" />
+      <Image
+        source={Header}
+        resizeMode="contain"
+        style={{
+          width: '100%',
+          height: undefined,
+          aspectRatio: 2,
+        }}
+      />
+      <WingBlank size="lg" style={{paddingHorizontal: '5%'}}>
         <Text style={styles.headerText}>
           Implications of reporting
         </Text>

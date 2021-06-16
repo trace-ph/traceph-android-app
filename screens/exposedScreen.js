@@ -31,7 +31,7 @@ const copyToClipboard = () => {
 export default function exposedTutorial(){	
 	return(
 		<ScrollView style={styles.defaultView}>
-			<WingBlank size="lg">
+			<WingBlank size="lg" style={{paddingHorizontal: '5%'}}>
 				<WhiteSpace size="xl" />
 				<Text style={styles.headerText}>
 					What to do when exposed?

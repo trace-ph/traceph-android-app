@@ -25,7 +25,7 @@ export default function aboutUsScreen({navigation}) {
       <React.Fragment>
         <StatusBar barStyle="dark-content" backgroundColor="white" />
         <ScrollView style={{backgroundColor: '#FFFFFF'}}>
-          <WingBlank size="lg">
+          <WingBlank size="lg" style={{paddingHorizontal: '5%'}}>
             <Flex direction="column" align="center" style={{marginTop: '10%'}}>
               <Image
                 source={DPH_icon}

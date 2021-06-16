@@ -1,4 +1,4 @@
-import React, {useContext, useState} from 'react';
+import React from 'react';
 import {
   Text,
   View,
@@ -14,7 +14,6 @@ export default function reportVerdict( {route, navigation} ) {
   // Get the parameters
   const { result } = route.params;
   let verdict = '';
-	const [showPopUp, setShowPopUp] = useState(true);
 
   // Verdict text
   if(result == 'scan')
@@ -35,7 +34,7 @@ export default function reportVerdict( {route, navigation} ) {
       <Modal
         animationType="fade"
         transparent={true}
-        visible={showPopUp}
+        visible={true}
         onRequestClose={() => console.log('Confirmation is closed')}
       >
         <View style={[styles.container, styles.dimBG]}>
