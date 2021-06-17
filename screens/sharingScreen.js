@@ -34,6 +34,10 @@ export default function SharingScreen({navigation}) {
           console.log('error starting and stopping monitoring');
         });
       });
+
+    return function cleanMonitoring() {
+      mFunc.stopMonitoring();
+    }
   }, []);
 
   const PeripheralListItem = props => {

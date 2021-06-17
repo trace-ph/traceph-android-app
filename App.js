@@ -165,6 +165,10 @@ const App = () => {
     else
       console.log('getNotification() is not called');
 
+    return function stopNotif(){
+      setNotifStart(false);
+    }
+
   }, [notifStart, nodeId]);
 
   useEffect(() => {
@@ -201,15 +205,15 @@ const App = () => {
         // Calls function again after 1 minute to re-attempt
         // Must be connected to net to re-attempt
         sleep(delay).then(() => {
-          if(timeout == 0 && isConnectedToNetRef.current)
-            sleep(delay).then(() => getNotification(node_id));
+          if(timeout == 0 && notifStartRef.current)
+            getNotification(node_id);
           else{
             setNotifRunning(false);
             console.warn('Notification is stopped');
           }
         });
         
-        console.error(err);
+        console.error("pollserver ", err);
         return;
       });
   }
