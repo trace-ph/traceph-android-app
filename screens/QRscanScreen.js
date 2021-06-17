@@ -29,10 +29,13 @@ export default class QRscanner extends React.Component {
     getToken(mFunc.nodeIdRef.current, e.data)
     .then((res) => {
       // Already reported status
-      if(res.status == 208) 
+      if(res.status == 208) {
         this.props.navigation.replace('reportVerdict', {
           result: 'scan'
         });
+        
+        return;
+      }
 
       // Go to Token input screen when successful
       const { test_result, test_result_date, reference_date } = this.props.route.params;
