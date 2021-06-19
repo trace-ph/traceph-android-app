@@ -69,6 +69,7 @@ const App = () => {
   const nodeIdRef = useRef();
   const notifStartRef = useRef();
   const notifRunningRef = useRef();
+  const notifMount = useRef();;
 
   // FxProvider value set as state in FxContext, tagged in index.js
   const {mFunc, setMFunc} = useContext(FxContext);
@@ -163,11 +164,7 @@ const App = () => {
     if(notifStartRef.current && nodeIdRef.current != null && !notifRunningRef.current)
       getNotification(nodeIdRef.current);
     else
-      console.log('getNotification() is not called');
-
-    return function stopNotif(){
-      setNotifStart(false);
-    }
+      console.log('getNotification() is not called;', notifStartRef.current, nodeIdRef.current, notifRunningRef.current);
 
   }, [notifStart, nodeId]);
 
@@ -175,10 +172,21 @@ const App = () => {
     notifRunningRef.current = notifRunning;
   }, [notifRunning]);
 
+  useEffect(() => { // Ensures that getNotification stops when app is closed
+    notifMount.current = true;
+    return () => { notifMount.current = false };
+  }, [])
+
 
   // Get notification from server
   // Non-zero timeout are for the background notifications
   const getNotification = (node_id, timeout = 0) => {
+    // Checks if unmounted due to app being closed
+    if(!notifMount.current){
+      console.log('Notification unmounted...');
+      return;
+    }
+
     setNotifRunning(true);
     console.log('Getting notification...');
 
@@ -205,9 +213,9 @@ const App = () => {
         // Calls function again after 1 minute to re-attempt
         // Must be connected to net to re-attempt
         sleep(delay).then(() => {
-          if(timeout == 0 && notifStartRef.current)
+          if(timeout == 0 && isConnectedToNetRef.current && notifRunningRef.current)
             getNotification(node_id);
-          else{
+          else {
             setNotifRunning(false);
             console.warn('Notification is stopped');
           }

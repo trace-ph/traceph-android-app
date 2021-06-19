@@ -24,22 +24,21 @@ module.exports = StyleSheet.create({
 		fontWeight: '100',
 		fontSize: 17,
 		lineHeight: 35,
-		color: '#808689',
-		//backgroundColor: '#808689',
+		color: '#666666',
 	},
 	cardDesc: {
 		textAlign: 'left',
 		fontWeight: '100',
 		fontWeight: '100',
 		fontSize: 15,
-		color: '#808689',
+		color: '#666666',
 	},
 	subText: {
 		textAlign: 'left',
 		fontWeight: '100',
 		fontWeight: '100',
 		fontSize: 12,
-		color: '#808689',
+		color: '#666666',
 	},
 	link: {
 		color: '#0888E2'
