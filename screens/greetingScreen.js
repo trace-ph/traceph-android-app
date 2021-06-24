@@ -2,21 +2,28 @@ import React, {useContext, useState} from 'react';
 import {
   StatusBar,
   Text,
+	Linking,
   ScrollView,
+  NativeModules,
 } from 'react-native';
+import Checkbox from '@react-native-community/checkbox';
 
-import {Button, Flex, WhiteSpace, WingBlank} from '@ant-design/react-native';
+import {Button, Flex, Toast, WhiteSpace, WingBlank} from '@ant-design/react-native';
 
 import FxContext from '../FxContext';
+const {ToastModule} = NativeModules;
 
 import Header from '../assets/potterHeader.svg';
 import styles from './Styles';
 
 const B = props => <Text style={{fontWeight: 'bold'}}>{props.children}</Text>;
+const P = props => <Text style={styles.link} onPress={() => Linking.openURL("https://github.com/trace-ph/traceph-android-app#detectph-android-app")}>{props.children}</Text>;
 
 export default function GreetingScreen({navigation}) {
   const {mFunc, setMFunc} = useContext(FxContext);
   const [isLoading, setIsLoading] = useState(false);
+  const [isAccepted, setIsAccepted] = useState(false);
+
   return (
     <>
       <React.Fragment>
@@ -34,17 +41,30 @@ export default function GreetingScreen({navigation}) {
               <WhiteSpace size="sm" />
 
               <Text style={styles.desc}>
-                To do this, we will need your help to turn on your <B>device bluetooth and location.</B>
+                To do this, we will need your help to turn on your <B>device bluetooth and location.</B> DetectPH exchanges Bluetooth signals with nearby mobile phones which runs the same app. 
               </Text>
               <WhiteSpace size="lg" />
 
               <Text style={styles.desc}>
-                DetectPH exchanges Bluetooth signals with nearby mobile phones which runs the same app. 
+                Do turn on your <B>internet or mobile data</B> every few hours to receive notifications and send your records.
               </Text>
               <WhiteSpace size="lg" />
+
+              <Text style={styles.cardDesc}>                
+              <Checkbox
+                value={isAccepted}
+                onChange={() => setIsAccepted(!isAccepted)}
+              />
+              I have read and accept the <P>privacy policy</P> of this app. 
+              </Text>
               <WhiteSpace size="sm" />
               <Button
                 onPress={() => {
+                  if(!isAccepted){
+                    ToastModule.showToast("You have to accept the privacy policy.")
+                    return;
+                  }
+
                   setIsLoading(true);
                   mFunc.getNodeId()
                     .then(() => {

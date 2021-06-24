@@ -33,35 +33,37 @@ export default function showNotification(){
 				<Text style={styles.headerText}>
 					Received notification
 				</Text>
-				<Text style={styles.desc}>
-					Your 3 latest received notifications can be viewed here:
-				</Text>
-				<WhiteSpace size="lg" />
+				<WingBlank size="lg">
+					<Text style={styles.desc}>
+						Your 3 latest received notifications can be viewed here:
+					</Text>
+					<WhiteSpace size="lg" />
 
-				<Card>
-					<Card.Header title={Object.keys(notifList)[0]} />
-					<Card.Body><WingBlank size="lg"><Text style={styles.cardDesc}>
-					{notifList[Object.keys(notifList)[0]]}
-					</Text></WingBlank></Card.Body>
-				</Card>
-				<WhiteSpace size="lg" />
+					<Card>
+						<Card.Header title={Object.keys(notifList)[0]} />
+						<Card.Body><WingBlank size="lg"><Text style={styles.cardDesc}>
+						{notifList[Object.keys(notifList)[0]]}
+						</Text></WingBlank></Card.Body>
+					</Card>
+					<WhiteSpace size="lg" />
 
-				<Card>
-					<Card.Header title={Object.keys(notifList)[1]} />
-					<Card.Body><WingBlank size="lg"><Text style={styles.cardDesc}>
-					{notifList[Object.keys(notifList)[1]]}
-					</Text></WingBlank></Card.Body>
-				</Card>
-				<WhiteSpace size="lg" />
+					<Card>
+						<Card.Header title={Object.keys(notifList)[1]} />
+						<Card.Body><WingBlank size="lg"><Text style={styles.cardDesc}>
+						{notifList[Object.keys(notifList)[1]]}
+						</Text></WingBlank></Card.Body>
+					</Card>
+					<WhiteSpace size="lg" />
 
-				<Card>
-					<Card.Header title={Object.keys(notifList)[2]} />
-					<Card.Body><WingBlank size="lg"><Text style={styles.cardDesc}>
-					{notifList[Object.keys(notifList)[2]]}
-					</Text></WingBlank></Card.Body>
-				</Card>
-				<WhiteSpace size="xl" />
-
+					<Card>
+						<Card.Header title={Object.keys(notifList)[2]} />
+						<Card.Body><WingBlank size="lg"><Text style={styles.cardDesc}>
+						{notifList[Object.keys(notifList)[2]]}
+						</Text></WingBlank></Card.Body>
+					</Card>
+					<WhiteSpace size="xl" />
+				</WingBlank>
+				
 				<Button
 					onPress={() => setRefresh(true)}
 					style={styles.redButton}

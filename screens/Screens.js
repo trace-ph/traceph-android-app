@@ -51,7 +51,7 @@ const ReportNavigator = () => {
 
 const DrawerNavigator = () => {
 	return(
-		<Drawer.Navigator initialRouteName="Contact-tracing">
+		<Drawer.Navigator initialRouteName="Contact-tracing" openByDefault={true}>
 			<Drawer.Screen name="Contact-tracing" component={BLENavigator} />
 			<Drawer.Screen name="Report" component={ReportNavigator} />
 			<Drawer.Screen name="Received notifications" component={showNotification} />

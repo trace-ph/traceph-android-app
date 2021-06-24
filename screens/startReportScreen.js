@@ -6,8 +6,6 @@ import {
 } from 'react-native';
 import styles from './Styles';
 
-// const {ToastModule} = NativeModules;
-
 import {Button, Flex, WhiteSpace, WingBlank} from '@ant-design/react-native';
 const B = props => <Text style={{fontWeight: 'bold'}}>{props.children}</Text>;
 
@@ -31,12 +29,14 @@ export default function startReport( {navigation} ) {
         <Text style={styles.headerText}>
           Implications of reporting
         </Text>
-        <Text style={styles.desc}>
-          To make a report, point the camera to the DetectPH QR code found in your lab test result. You can only report once per day.
-          {"\n\n"}
-          <B>Remember:</B> You're only reporting for yourself and <B>not</B> on behalf of others.
-        </Text>
-        <WhiteSpace size="xl" />
+        <WingBlank size="lg">
+          <Text style={styles.desc}>
+            To make a report, point the camera to the DetectPH QR code found in your lab test result. You can only report once per day.
+            {"\n\n"}
+            <B>Remember:</B> You're only reporting for yourself and <B>not</B> on behalf of others.
+          </Text>
+          <WhiteSpace size="xl" />
+        </WingBlank>
 
         <Button
         onPress={() => {
