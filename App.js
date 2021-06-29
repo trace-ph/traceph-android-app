@@ -119,6 +119,7 @@ const App = () => {
       enableBluetooth,
       startMonitoring,
       stopMonitoring,
+      fetchNodeID,
       getNodeId,
       nodeIdRef,
     });
@@ -227,48 +228,54 @@ const App = () => {
   }
 
 
-  // get device android ID
-  const getNodeId = useCallback(() =>
+  // Get device android ID from storage; This means device is registered
+  const fetchNodeID = useCallback(() =>
     new Promise(async (resolve, reject) => {
-      //CHECKOUT if node_id changes at reinstall, and so display the node_id on screen
       try {
         // set android id if available
         let node_id = (await MmkvStore.getStringAsync('node_id')) || null;
         setNodeId(node_id);
+        console.log('Node ID:', node_id);
         resolve();
+      } catch(err) {
+        console.log('Not yet registered');
+        reject();
+      }
+    }),
+  [], );
 
-      } catch (err) {
-        console.warn('node_id not found', err);
-        // if err, register node id
-        if (isConnectedToNetRef.current) {
-          let cancel = {exec: null};
-          const regTOId = BackgroundTimer.setTimeout(() => {
-            cancel.exec();
-          }, 180000);
+  // get device android ID 
+  const getNodeId = useCallback(() =>
+    new Promise(async (resolve, reject) => {
+      //CHECKOUT if node_id changes at reinstall, and so display the node_id on screen
+      if (isConnectedToNetRef.current) {
+        let cancel = {exec: null};
+        const regTOId = BackgroundTimer.setTimeout(() => {
+          cancel.exec();
+        }, 180000);
 
-          registerDevice(cancel)	// gets androidId from device & inserts it to the database
-            .then(async node_id => {
-              try {
-                // store retrieved node_id
-                await MmkvStore.setStringAsync('node_id', node_id);
-                setNodeId(node_id);
-                resolve();
-              } catch (err) {
-                console.error('local storage cant update', err);
-                reject();
-              }
-            })
-            .catch(err => {
-              console.error('registering error', err);
-              ToastModule.showToast('Could not register your device. Try again.');
+        registerDevice(cancel)	// gets androidId from device & inserts it to the database
+          .then(async node_id => {
+            try {
+              // store retrieved node_id
+              await MmkvStore.setStringAsync('node_id', node_id);
+              setNodeId(node_id);
+              resolve();
+            } catch (err) {
+              console.error('local storage cant update', err);
               reject();
-            })
-            .finally(() => BackgroundTimer.clearTimeout(regTOId));
+            }
+          })
+          .catch(err => {
+            console.error('registering error', err);
+            ToastModule.showToast('Could not register your device. Try again.');
+            reject();
+          })
+          .finally(() => BackgroundTimer.clearTimeout(regTOId));
 
-        } else {
-          ToastModule.showToast('Internet Connection Needed. Try again.');
-          reject();
-        }
+      } else {
+        ToastModule.showToast('Internet Connection Needed. Try again.');
+        reject();
       }
     }),
   [], );

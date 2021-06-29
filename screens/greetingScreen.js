@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 import Checkbox from '@react-native-community/checkbox';
 
-import {Button, Flex, Toast, WhiteSpace, WingBlank} from '@ant-design/react-native';
+import {Button, Flex, WhiteSpace, WingBlank} from '@ant-design/react-native';
 
 import FxContext from '../FxContext';
 const {ToastModule} = NativeModules;
@@ -37,18 +37,27 @@ export default function GreetingScreen({navigation}) {
               <Text style={styles.desc}>
                 DetectPH would like to ask for your consent in sending information of encounters with you if they have been confirmed positive of COVID-19.
               </Text>
-              <WhiteSpace size="lg" />
-              <WhiteSpace size="sm" />
+              <WhiteSpace size="xl" />
 
               <Text style={styles.desc}>
-                To do this, we will need your help to turn on your <B>device bluetooth and location.</B> DetectPH exchanges Bluetooth signals with nearby mobile phones which runs the same app. 
+                To do this, we will need your help by turning on your <B>device bluetooth and location.</B> DetectPH exchanges Bluetooth signals with nearby mobile phones which runs the same app. These signal will serve as records of your contacts. The records are made as long as the app is open, even in the background.
               </Text>
-              <WhiteSpace size="lg" />
+              <WhiteSpace size="xl" />
+
+              <Text style={styles.desc}>
+                You may also report in-app of your lab test results by scanning our QR code found in your results. By reporting to us, we will notify your close contacts for you. We don't keep records of your reports.
+              </Text>
+              <WhiteSpace size="xl" />
 
               <Text style={styles.desc}>
                 Do turn on your <B>internet or mobile data</B> every few hours to receive notifications and send your records.
               </Text>
-              <WhiteSpace size="lg" />
+              <WhiteSpace size="xl" />
+              
+              <Text style={styles.desc}>
+                Let's help each other in these times. Early detection, better protection.
+              </Text>
+              <WhiteSpace size="sm" />
 
               <Text style={styles.cardDesc}>                
               <Checkbox
@@ -57,7 +66,8 @@ export default function GreetingScreen({navigation}) {
               />
               I have read and accept the <P>privacy policy</P> of this app. 
               </Text>
-              <WhiteSpace size="sm" />
+              <WhiteSpace size="xl" />
+
               <Button
                 onPress={() => {
                   if(!isAccepted){

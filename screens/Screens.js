@@ -11,6 +11,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 */
 import { createDrawerNavigator } from '@react-navigation/drawer';
 
+import SplashScreen from './SplashScreen';
 import SharingScreen from './sharingScreen';
 import GreetingScreen from './greetingScreen';
 import AskBluScreen from './askForBluetoothScreen';
@@ -51,7 +52,7 @@ const ReportNavigator = () => {
 
 const DrawerNavigator = () => {
 	return(
-		<Drawer.Navigator initialRouteName="Contact-tracing" openByDefault={true}>
+		<Drawer.Navigator initialRouteName="Contact-tracing">
 			<Drawer.Screen name="Contact-tracing" component={BLENavigator} />
 			<Drawer.Screen name="Report" component={ReportNavigator} />
 			<Drawer.Screen name="Received notifications" component={showNotification} />
@@ -66,7 +67,8 @@ const DrawerNavigator = () => {
 export default function screens(){
 	return(
 		<NavigationContainer>
-			<Stack.Navigator initialRouteName="Greet" headerMode="none">
+			<Stack.Navigator initialRouteName="Splash" headerMode="none">
+				<Stack.Screen name="Splash" component={SplashScreen} />
 				<Stack.Screen name="Greet" component={GreetingScreen} />
 				<Stack.Screen name="Drawer" component={DrawerNavigator} />
 				<Stack.Screen name="askForBluetooth" component={AskBluScreen} />

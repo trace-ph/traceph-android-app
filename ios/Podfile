@@ -60,6 +60,8 @@ target 'TracePH' do
 
   pod 'react-native-netinfo', :path => '../node_modules/@react-native-community/netinfo'
 
+  pod 'RNVectorIcons', :path => '../node_modules/react-native-vector-icons'
+
   target 'TracePHTests' do
     inherit! :complete
     # Pods for testing
