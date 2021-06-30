@@ -51,7 +51,6 @@ const App = () => {
   const [currentDiscoveredDevices, setCurrentDiscoveredDevices] = useState([]);
   const [discoveryLog, setDiscoveryLog] = useState([]);
   const [recognizedDevices, setRecognizedDevices] = useState([]);
-  const [dataForDisplay, setDataForDisplay] = useState('');
   // const [location, setLocation] = useState([]);
   const [isConnectedToNet, setIsConnectedToNet] = useState(false);
   const [nodeId, setNodeId] = useState(null);
@@ -303,11 +302,11 @@ const App = () => {
           } else {
             PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION)
             .then(result => {
-              if (result) {
-                console.log('User accept');
+              if (result === 'granted') {
+                console.log('User accept', result);
               } else {
-                console.log('User refuse');
-                reject();
+                console.log('User refuse', result);
+                reject(result);
               }
             });
           }
@@ -321,11 +320,11 @@ const App = () => {
           } else {
             PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION)
             .then(result => {
-              if (result) {
-                console.log('User accept');
+              if (result === 'granted') {
+                console.log('User accept', result);
               } else {
-                console.log('User refuse');
-                reject();
+                console.log('User refuse', result);
+                reject(result);
               }
             });
           }
@@ -510,8 +509,6 @@ const App = () => {
           // get storage if it exists, or empty array
           localStorage = (await MmkvStore.getArrayAsync('discLogs')) || [];
           // console.log('localStorage', localStorage);
-          let mtext = JSON.stringify(localStorage);
-          setDataForDisplay(mtext);
         } catch (err) {
           console.log('local storage not found', err);
         }

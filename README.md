@@ -4,6 +4,8 @@
 
 DetectPH built the DetectPH app as a contact tracing mobile application, currently for COVID-19. Our goal is to become the main contact tracing app in the Philippines of not only in COVID-19 but also in other diseases. We do this by collecting records of users nearby, automating contact tracing procedures, and quickly notifying those we determined as exposed while ensuring the privacy of users. This SERVICE is provided by DetectPH at no cost and is intended for use as is.
 
+This app is ONLY available in the Philippines and therefore will only work within the country.
+
 This page is used to inform visitors regarding our policies with the collection, use, and disclosure of Personal Information if anyone decided to use our Service.
 
 If you choose to use our Service, then you agree to the collection and use of information in relation to this policy. The Personal Information that we collect is used for providing and improving the Service. we will not use or share your information with anyone except as described in this Privacy Policy.
@@ -12,11 +14,11 @@ The terms used in this Privacy Policy have the same meanings as in our Terms and
 
 **Information Collection and Use**
 
-While using our Service, we do not require you to provide us with certain personally identifiable information, including but not limited to name, age, gender, contact number, photo, address, and/or email addresses.
+While using our Service, we DO NOT require you to provide us with certain personally identifiable information, including but not limited to name, age, gender, contact number, photo, address, and/or email addresses.
 
 To register, we require you to share your device ID and device model in exchange of our generated ID, which will be used for contact tracing. We also ask that you give permissions in Bluetooth and location access. We use Bluetooth to collect records of users in proximity. These records include Received Signal Strength Indicator (RSSI) and transmitted power (txPower) of your Bluetooth, the generated ID of you and your contact, and the time of contact. We DO NOT collect your location coordinates. We only use location access to ensure Bluetooth communications work. You can always OPT-OUT from creating these records by disabling contact tracing in-app. The records will be used to determine who are your close contacts to whom we'll notify their exposure. They are kept for only 3 weeks. 
 
-You may also voluntarily declare in-app of your lab test results by filling out the dates of testing and when the test result is received, and whether you're positive. The validity of your report is determined by scanning a QR code found in your test results. These QR codes are only found in laboratories we are coordinating with.
+You may also voluntarily declare in-app of your lab test results by filling out the dates of testing and when the test result is received, and whether you're positive. By reporting to us, DetectPH will be the ones to notify your close contacts for you. The validity of your report is determined by scanning a QR code found in your test results. These QR codes are only found in laboratories we are coordinating with. We only keep your reports within the day to ensure that we don't receive multiple reports from the same device.
 
 The information that we request will be retained by us and used as described in this privacy policy.
 
@@ -62,7 +64,7 @@ These Services do not address anyone under the age of 13. We do not knowingly co
 
 We may update our Privacy Policy from time to time. Thus, you are advised to review this page periodically for any changes. we will notify you of any changes by posting the new Privacy Policy on this page.
 
-This policy is effective as of 2021-06-25.
+This policy is effective as of 2020-04-16. Policy has been updated as of 2021-06-30.
 
 **Contact Us**
 

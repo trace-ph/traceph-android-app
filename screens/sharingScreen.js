@@ -40,31 +40,6 @@ export default function SharingScreen({navigation}) {
     }
   }, []);
 
-  const PeripheralListItem = props => {
-    const {item = {advertising: {}}} = props;
-    console.log(item);
-    return (
-      <React.Fragment>
-        <WhiteSpace size="lg" />
-        <WingBlank size="lg">
-          <Card>
-            <Card.Header title={item.id} />
-            <Card.Body>
-              <View style={{minHeight: 50}}>
-                <Text style={{marginLeft: 16}}>Timestamp: {item.time}</Text>
-                <Text style={{marginLeft: 16}}>
-                  TX Power Lvl: {item.txPower}
-                </Text>
-                <Text style={{marginLeft: 16}}>RSSI: {item.rssi}</Text>
-                <Text style={{marginLeft: 16}}>Data: {item.data}</Text>
-              </View>
-            </Card.Body>
-          </Card>
-        </WingBlank>
-      </React.Fragment>
-    );
-  };
-
   return (
     <>
       <React.Fragment>

@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import styles from './Styles';
 
+const {ToastModule} = NativeModules;
 
 import {Button, Flex, WhiteSpace, WingBlank} from '@ant-design/react-native';
 
@@ -42,17 +43,12 @@ export default function AskBluScreen({navigation}) {
               </Text>
               <WhiteSpace size="lg" />
               <Text style={styles.desc}>
-                Please turn on your bluetooth from your settings to start using
-                detectPH app.
+                Please turn on your bluetooth and location from your settings to start using DetectPH app. Make sure to set the permissions to <B>Allow all the time</B> option.
               </Text>
-              <WhiteSpace size="lg" />
-              <WhiteSpace size="lg" />
-              <WhiteSpace size="lg" />
-              <WhiteSpace size="lg" />
-              <WhiteSpace size="lg" />
-              <WhiteSpace size="lg" />
-              <WhiteSpace size="lg" />
-              <WhiteSpace size="lg" />
+              <WhiteSpace size="xl" />
+              <WhiteSpace size="xl" />
+              <WhiteSpace size="xl" />
+              <WhiteSpace size="xl" />
               <Button
                 onPress={() => {
                   mFunc
@@ -60,7 +56,11 @@ export default function AskBluScreen({navigation}) {
                     .then(() => {
                       navigation.replace('Drawer');
                     })
-                    .catch(err => console.log('err', err));
+                    .catch((err) => {
+                      console.log('err', err);
+                      if(err == 'never_ask_again' || err == 'denied')
+                        ToastModule.showToast('Location access is denied');
+                    });
                 }}
                 style={styles.redButton}
                 type="warning">

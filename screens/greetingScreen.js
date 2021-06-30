@@ -40,7 +40,7 @@ export default function GreetingScreen({navigation}) {
               <WhiteSpace size="xl" />
 
               <Text style={styles.desc}>
-                To do this, we will need your help by turning on your <B>device bluetooth and location.</B> DetectPH exchanges Bluetooth signals with nearby mobile phones which runs the same app. These signal will serve as records of your contacts. The records are made as long as the app is open, even in the background.
+                To do this, we will need your help by turning on your <B>device bluetooth and location</B> and <B>disabling your battery optimizations</B> for this app. DetectPH exchanges Bluetooth signals with nearby mobile phones which runs the same app. These signal will serve as records of your contacts. The records are made as long as the app is open, even in the background. You may opt-out from being traced by disabling contact-tracing. We DO NOT access your location. We're only using the location access to ensure Bluetooth is working.
               </Text>
               <WhiteSpace size="xl" />
 
