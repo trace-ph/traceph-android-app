@@ -7,12 +7,12 @@ import {
   Clipboard,
   NativeModules,
 } from 'react-native';
-// Styles
 import styles from './Styles';
 
 import { WhiteSpace, WingBlank, Card } from '@ant-design/react-native';
 import { List } from 'react-native-paper';
 
+const B = props => <Text style={{fontWeight: 'bold'}}>{props.children}</Text>;
 const L = props => <Text style={styles.link} onPress={() => Linking.openURL(props.children)}>{props.children}</Text>;
 const C = props => <Text style={styles.copy} onPress={() => { Clipboard.setString(props.children); ToastModule.showToast("Copied " + props.children);}}>{props.children}</Text>;
 
@@ -38,6 +38,13 @@ export default function exposedTutorial(){
 				<Text style={styles.headerText}>
 					What to do when exposed?
 				</Text>
+				<List.Accordion title="Definition of Close Contacts">
+					<WingBlank size="lg">
+						<Text style={styles.desc}>
+						Close contacts are defined as direct contacts and proximal contacts. You are a <B>direct contact</B> if you were within 2 meters of the confirmed COVID-positive case. You are a <B>proximal contact</B> if you were within 3 meters and were in proximity for more than 15 minutes with the confirmed  COVID-positive case. We set these distances with the assumption that users are not wearing proper PPE and face masks. The increase of 1 meter from the stated conditions of WHO, CDC, and DOH is to ensure that you'll be included as exposed if you're using mass transportations. We assume that all mass transportation you use are enclosed spaces.
+						</Text>
+					</WingBlank>
+				</List.Accordion>
 				<List.Accordion title="Guidelines">
 					<WingBlank size="lg">
 						<Text style={styles.desc}>
@@ -96,7 +103,8 @@ export default function exposedTutorial(){
 							<Card.Body><WingBlank size="lg"><Text style={styles.cardDesc}>
 								- COVID-19 Tracker: <L>https://doh.gov.ph/covid19tracker</L>{'\n'}
 								- FAQ: <L>https://doh.gov.ph/COVID-19/FAQs</L>{'\n'}
-								- Updates: <L>https://doh.gov.ph/2019-nCoV</L>
+								- Updates: <L>https://doh.gov.ph/2019-nCoV</L>{'\n'}
+								- Contact-tracing guidelines: <L>https://doh.gov.ph/node/21752</L>
 							</Text></WingBlank></Card.Body>
 						</Card>
 						<WhiteSpace size="lg" />
@@ -109,6 +117,28 @@ export default function exposedTutorial(){
 								- FAQ: <L>https://www.covid19.gov.ph/frequently-asked-questions</L>
 							</Text></WingBlank></Card.Body>
 						</Card>
+						<WhiteSpace size="lg" />
+				
+						<Card>
+							<Card.Header title="World Health Organization (WHO)" />
+							<Card.Body><WingBlank size="lg"><Text style={styles.cardDesc}>
+								- What is COVID-19: <L>https://www.who.int/health-topics/coronavirus#tab=tab_1</L>{'\n'}
+								- COVID-19 Guidelines: <L>https://www.who.int/emergencies/diseases/novel-coronavirus-2019/advice-for-public</L>{'\n'}
+								- FAQ: <L>https://www.who.int/emergencies/diseases/novel-coronavirus-2019/question-and-answers-hub</L>{'\n'}
+								- Contact-tracing guidelines: <L>https://www.who.int/publications/i/item/contact-tracing-in-the-context-of-covid-19</L>
+							</Text></WingBlank></Card.Body>
+						</Card>
+						<WhiteSpace size="lg" />
+				
+						<Card>
+							<Card.Header title="Centers for Disease Control and Prevention (CDC)" />
+							<Card.Body><WingBlank size="lg"><Text style={styles.cardDesc}>
+								- COVID-19 Guidelines: <L>https://www.cdc.gov/coronavirus/2019-ncov/prevent-getting-sick/prevention.html</L>{'\n'}
+								- FAQ: <L>https://www.cdc.gov/coronavirus/2019-ncov/faq.html</L>{'\n'}
+								- Contract-tracing guidelines: <L>https://www.cdc.gov/coronavirus/2019-ncov/php/contact-tracing/contact-tracing-plan/contact-tracing.html</L>
+							</Text></WingBlank></Card.Body>
+						</Card>
+						<WhiteSpace size="lg" />
 					</WingBlank>
 				</List.Accordion>
 				<WhiteSpace size="xl" />

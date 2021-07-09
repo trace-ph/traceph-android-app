@@ -3,6 +3,7 @@ import {
   View,
   NativeModules,
 } from 'react-native';
+import styles from './Styles';
 
 import FxContext from '../FxContext';
 
@@ -10,6 +11,7 @@ import FxContext from '../FxContext';
 import QRCodeScanner from 'react-native-qrcode-scanner';
 
 import { getToken } from '../apis/report';
+import { inlineStyles } from 'react-native-svg';
 
 
 export default class QRscanner extends React.Component {
@@ -63,7 +65,7 @@ export default class QRscanner extends React.Component {
 
   render(){
     return (
-      <View style={{flex:1}}>
+      <View style={styles.defaultView}>
         {/* Opens camera and scan QR code */}
         {(<QRCodeScanner
           onRead={this.onSuccess.bind(this)}

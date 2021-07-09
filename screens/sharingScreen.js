@@ -57,11 +57,6 @@ export default function SharingScreen({navigation}) {
                 <Text style={styles.desc}>
                   Whenever we confirmed that someone you have encountered has been tested positive for COVID-19, we will give you notification.
                 </Text>
-                <WhiteSpace size="sm" />
-
-                <Text style={styles.desc}>
-                  Swipe from left to right to open the menu.
-                </Text>
               </WingBlank>
               <WhiteSpace size="lg" />
               <WhiteSpace size="lg" />

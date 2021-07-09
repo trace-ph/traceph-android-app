@@ -1,4 +1,7 @@
 import React from 'react';
+import {
+	View,
+} from 'react-native';
 
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
@@ -21,18 +24,47 @@ import reportVerdict from './reportVerdictScreen';
 import startReport from './startReportScreen';
 import inputResults from './inputResultsScreen';
 import showNotification from './showNotificationScreen';
-import exposedTutorial from './exposedScreen';
+import exposedScreen from './exposedScreen';
 import aboutUsScreen from './aboutUsScreen';
 
 const Stack = createStackNavigator();
 const Drawer = createDrawerNavigator();
 
+// Header
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+const darkColor = "#666666";
+const lightColor = "#FFFFFF";
+const DrawerStruct = (props) => {
+	const toggleDrawer = () => { props.navigationProps.toggleDrawer() };
+
+	return (
+		<View style={{ flexDirection: 'row' }}>
+			<MaterialIcons.Button
+				name="menu"
+				backgroundColor={lightColor}
+				color={darkColor}
+				onPress={toggleDrawer}
+				size={30}
+			/>
+    </View>
+	);
+};
+const headerOptions = ({navigation}) => (
+	{
+		headerLeft: () => (<DrawerStruct navigationProps={navigation} />),
+		headerStyle: {
+			backgroundColor: lightColor
+		},
+		headerTintColor: lightColor,
+	}
+);
+
 
 // Stack navigator of BLE
 const BLENavigator = () => {
 	return (
-		<Stack.Navigator initialRouteName="Sharing" headerMode="none">
-			<Stack.Screen name="Sharing" component={SharingScreen} />
+		<Stack.Navigator initialRouteName="Sharing" >
+			<Stack.Screen name="Sharing" component={SharingScreen} options={headerOptions} />
 		</Stack.Navigator>
 	);
 }
@@ -40,24 +72,51 @@ const BLENavigator = () => {
 // Stack navigator of Report
 const ReportNavigator = () => {
 	return(
-		<Stack.Navigator initialRouteName="home" headerMode="none">
-			<Stack.Screen name="home" component={startReport} />
-			<Stack.Screen name="inputResults" component={inputResults} />
-			<Stack.Screen name="QRscanner" component={QRscanner} />
-			<Stack.Screen name="inputToken" component={inputToken} />
-			<Stack.Screen name="reportVerdict" component={reportVerdict} />
+		<Stack.Navigator initialRouteName="home" >
+			<Stack.Screen name="home" component={startReport} options={headerOptions} />
+			<Stack.Screen name="inputResults" component={inputResults} options={{ headerShown: false }} />
+			<Stack.Screen name="QRscanner" component={QRscanner} options={{ headerShown: false }} />
+			<Stack.Screen name="inputToken" component={inputToken} options={{ headerShown: false }} />
+			<Stack.Screen name="reportVerdict" component={reportVerdict} options={{ headerShown: false }} />
+		</Stack.Navigator>
+	);
+}
+
+// Stack navigator of Notification Screen
+const NotifNavigator = () => {
+	return (
+		<Stack.Navigator initialRouteName="Received notifications" >
+			<Stack.Screen name="Received notifications" component={showNotification} options={headerOptions} />
+		</Stack.Navigator>
+	);
+}
+
+// Stack navigator of Exposed Screen
+const ExposedNavigator = () => {
+	return (
+		<Stack.Navigator initialRouteName="Sharing" >
+			<Stack.Screen name="Sharing" component={exposedScreen} options={headerOptions} />
+		</Stack.Navigator>
+	);
+}
+
+// Stack navigator of About Us
+const AboutNavigator = () => {
+	return (
+		<Stack.Navigator initialRouteName="About Us" >
+			<Stack.Screen name="About Us" component={aboutUsScreen} options={headerOptions} />
 		</Stack.Navigator>
 	);
 }
 
 const DrawerNavigator = () => {
 	return(
-		<Drawer.Navigator initialRouteName="Contact-tracing">
+		<Drawer.Navigator initialRouteName="Contact-tracing" >
 			<Drawer.Screen name="Contact-tracing" component={BLENavigator} />
 			<Drawer.Screen name="Report" component={ReportNavigator} />
-			<Drawer.Screen name="Received notifications" component={showNotification} />
-			<Drawer.Screen name="When exposed" component={exposedTutorial} />
-			<Drawer.Screen name="About Us" component={aboutUsScreen} />
+			<Drawer.Screen name="Received notifications" component={NotifNavigator} />
+			<Drawer.Screen name="When exposed" component={ExposedNavigator} />
+			<Drawer.Screen name="About Us" component={AboutNavigator} />
 		</Drawer.Navigator>
 	);
 }
