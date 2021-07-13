@@ -3,10 +3,13 @@ import {
   Text,
   View,
   Modal,
+  NativeModules,
 } from 'react-native'; 
 import styles from './Styles';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import Checkbox from '@react-native-community/checkbox';
+
+const {ToastModule} = NativeModules;
 
 import {Button, Flex, WhiteSpace, WingBlank, List} from '@ant-design/react-native';
 const B = props => <Text style={{fontWeight: 'bold'}}>{props.children}</Text>;
@@ -57,7 +60,7 @@ export default function inputResults( {route, navigation} ) {
           value={pickTestDate ? testDate : resultDate}
           mode='date'
           display='calendar'
-          maximumDate={new Date()}
+          maximumDate={pickTestDate ? resultDate : new Date()}    // Test date should not go beyond result date
           onChange={(event, date) => {
             setPickResultDate(false);
             setPickTestDate(false);
@@ -74,7 +77,13 @@ export default function inputResults( {route, navigation} ) {
 
         <WhiteSpace size="xl" />
         <Button
-          onPress={() => setShowPopUp(true)}
+          onPress={() => {
+            if(testDate > resultDate){
+              ToastModule.showToast("Test date should be before your result date");
+              return;
+            }
+            setShowPopUp(true)
+          }}
           style={styles.redButton}
           type="warning"
         > 

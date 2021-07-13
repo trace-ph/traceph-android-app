@@ -16,7 +16,7 @@ import {Button, Flex, WhiteSpace, WingBlank} from '@ant-design/react-native';
 const B = props => <Text style={{fontWeight: 'bold'}}>{props.children}</Text>;
 const L = props => <Text style={styles.link} onPress={() => Linking.openURL(props.children)}>{props.children}</Text>;
 const C = props => <Text style={styles.copy} onPress={() => { Clipboard.setString(props.children); ToastModule.showToast("Copied " + props.children);}}>{props.children}</Text>;
-const P = props => <Text style={styles.link} onPress={() => Linking.openURL("https://github.com/trace-ph/traceph-android-app#detectph-android-app")}>{props.children}</Text>;
+const P = props => <Text style={styles.link} onPress={() => Linking.openURL("https://detectph.com/privacy.html")}>{props.children}</Text>;
 
 const DPH_icon = require('../assets/DetectPH_transparent.png');
 

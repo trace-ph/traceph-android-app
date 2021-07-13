@@ -17,7 +17,7 @@ import Header from '../assets/potterHeader.svg';
 import styles from './Styles';
 
 const B = props => <Text style={{fontWeight: 'bold'}}>{props.children}</Text>;
-const P = props => <Text style={styles.link} onPress={() => Linking.openURL("https://github.com/trace-ph/traceph-android-app#detectph-android-app")}>{props.children}</Text>;
+const P = props => <Text style={styles.link} onPress={() => Linking.openURL("https://detectph.com/privacy.html")}>{props.children}</Text>;
 
 export default function GreetingScreen({navigation}) {
   const {mFunc, setMFunc} = useContext(FxContext);
