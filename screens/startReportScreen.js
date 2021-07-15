@@ -1,20 +1,25 @@
-import React, {useContext, useState} from 'react';
+import React, {useContext} from 'react';
 import {
   Text,
   Image,
-  View,
+  ScrollView,
+  NativeModules,
 } from 'react-native';
 import styles from './Styles';
+
+import FxContext from '../FxContext';
+const {ToastModule} = NativeModules;
 
 import {Button, Flex, WhiteSpace, WingBlank} from '@ant-design/react-native';
 const B = props => <Text style={{fontWeight: 'bold'}}>{props.children}</Text>;
 
 const Header = require('../assets/report.png');
 
-export default function startReport( {navigation} ) {
+export default function startReport({ navigation }) {
+  const {mFunc, setMFunc} = useContext(FxContext);
 
   return (
-    <View style={styles.defaultView}>
+    <ScrollView style={styles.defaultView}>
       <WhiteSpace size="xl" />
       <Image
         source={Header}
@@ -31,7 +36,7 @@ export default function startReport( {navigation} ) {
         </Text>
         <WingBlank size="lg">
           <Text style={styles.desc}>
-            To make a report, point the camera to the DetectPH QR code found in your lab test result. You can only report once per day.
+            To make a report, point the camera to the DetectPH QR code found in your lab test result. The camera will scan the QR code and get a code for you to input. Once your report is authenticated, we will use the info you filled up to find your close contacts and notify them. You can only report successfully once per day.
             {"\n\n"}
             <B>Remember:</B> You're only reporting for yourself and <B>not</B> on behalf of others.
           </Text>
@@ -40,14 +45,21 @@ export default function startReport( {navigation} ) {
 
         <Button
         onPress={() => {
-          navigation.navigate('inputResults');
+          mFunc.enableCamera()
+          .then(() => navigation.navigate('inputResults'))
+          .catch((err) => {
+            console.log("Camera err: ", err);
+            ToastModule.showToast("Camera is not permitted");
+          });
         }}
         type="warning"
         style={styles.redButton}
         >
         I understand!
         </Button>
+        <WhiteSpace size="lg" />
+        <WhiteSpace size="lg" />
       </WingBlank>
-    </View>
+    </ScrollView>
   );
 }

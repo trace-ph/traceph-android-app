@@ -116,6 +116,7 @@ const App = () => {
 	// assign functions to mFunc in FxContext, mFuncs are used in screens
     setMFunc({
       enableBluetooth,
+      enableCamera,
       startMonitoring,
       stopMonitoring,
       fetchNodeID,
@@ -342,6 +343,29 @@ const App = () => {
         ToastModule.showToast("Can't operate without bluetooth.");
         console.log('The user refuse to enable bluetooth');
         reject();
+      });
+    }),
+  [], );
+
+  const enableCamera = useCallback(() =>
+    new Promise((resolve, reject) => {
+      PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.CAMERA)
+      .then(result => {
+        if (result) {
+          console.log('Camera Permission is OK');
+          resolve();
+        } else {
+          PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.CAMERA)
+          .then(result => {
+            if (result === 'granted') {
+              console.log('Camera OK', result);
+              resolve();
+            } else {
+              console.log('Camera NOT ok', result);
+              reject(result);
+            }
+          });
+        }
       });
     }),
   [], );
