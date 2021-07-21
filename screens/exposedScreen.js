@@ -151,6 +151,14 @@ export default function exposedTutorial(){
 						You may contact the following for COVID-19 inquiries.
 					</Text>
 					<WhiteSpace size="lg" />
+
+				<Card>
+					<Card.Header title="Yani the Endcovbot" />
+					<Card.Body><WingBlank size="lg"><Text style={styles.cardDesc}>
+						If you have questions about Health and COVID-19, vaccines, and more, talk to Yani, the Endcovbot: : <L>https://m.me/YaniEndCovBot</L>{'\n\n'}
+						Yani, the COVID-19 Messenger chatbot developed by the University of the Philippines Resilience Institute, can help users find vaccination sites, hospitals with vacant beds and available ventilators, COVID-19 statistics, topics on the current pandemic situation, and more. For more info, visit Yani's page: <L>https://www.facebook.com/YaniEndCovBot</L>
+					</Text></WingBlank></Card.Body>
+				</Card>
 					
 					<Card>
 						<Card.Header title="University Health Service (UHS)" />
@@ -176,7 +184,6 @@ export default function exposedTutorial(){
 						<Card.Header title="Other hospital contacts" />
 						<Card.Body><WingBlank size="lg"><Text style={styles.cardDesc}>
 							You may find hospital contacts through this link: <L>https://endcov.ph/hospitals/</L>
-							{/* {'\n'}Or you may contact Yani, our Covid chatbot: <L>m.me/YaniEndCovBot</L> */}
 						</Text></WingBlank></Card.Body>
 					</Card>
 				</WingBlank>
