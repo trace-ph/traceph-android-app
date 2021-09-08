@@ -8,6 +8,7 @@ import {
 import styles from './Styles';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import Checkbox from '@react-native-community/checkbox';
+import moment from 'moment';
 
 const {ToastModule} = NativeModules;
 
@@ -35,14 +36,14 @@ export default function inputResults( {route, navigation} ) {
         <List>
           <Text style={styles.desc}>When did you get tested?</Text>
           <List.Item 
-            extra={formatDate(testDate)}
+            extra={moment(testDate).format("MMMM D, YYYY")}
             onClick={() => setPickTestDate(true)}
             wrap
           />
 
           <Text style={styles.desc}>When did you received your lab results?</Text>
           <List.Item 
-            extra={formatDate(resultDate)}
+            extra={moment(resultDate).format("MMMM D, YYYY")}
             onClick={() => setPickResultDate(true)}
             wrap
           />
@@ -101,8 +102,8 @@ export default function inputResults( {route, navigation} ) {
         <View style={[styles.container, styles.dimBG]}>
           <View style={styles.popUp}>
           <Text style={styles.headerText}>Are these correct?</Text>
-          <Text style={styles.desc}><B>Testing date:</B> {formatDate(testDate)}</Text>
-          <Text style={styles.desc}><B>Received result date:</B> {formatDate(resultDate)}</Text>
+          <Text style={styles.desc}><B>Testing date:</B> {moment(testDate).format("MMMM D, YYYY")}</Text>
+          <Text style={styles.desc}><B>Received result date:</B> {moment(resultDate).format("MMMM D, YYYY")}</Text>
           <Text style={styles.desc}><B>COVID result:</B> {covidResult ? 'Positive' : 'Negative'}</Text>
           <WhiteSpace size="sm" />
           <Button
@@ -116,8 +117,8 @@ export default function inputResults( {route, navigation} ) {
               setShowPopUp(false);
               navigation.navigate('QRscanner', {
                 test_result: covidResult,
-                test_result_date: formatDate(resultDate),
-                reference_date: formatDate(testDate),
+                test_result_date: moment(resultDate).format("YYYY-MM-DD"),
+                reference_date: moment(testDate).format("YYYY-MM-DD"),
               });
             }}
             style={styles.redButton}
@@ -130,19 +131,4 @@ export default function inputResults( {route, navigation} ) {
       </Modal>
     </View>
   );
-}
-
-
-function formatDate(createdDate){
-	let m = createdDate.getMonth() + 1;
-	let d = createdDate.getDate();
-	let y = createdDate.getFullYear();
-  if(m < 10 && d < 10)
-    return date = y + '-0' + m + '-0' + d;
-  else if(m < 10)
-    return date = y + '-0' + m + '-' + d;
-  else if(d < 10)
-    return date = y + '-' + m + '-0' + d;
-  else
-    return date = y + '-' + m + '-' + d;
 }

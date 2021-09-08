@@ -1,5 +1,6 @@
 import BackgroundTimer from 'react-native-background-timer';
 import MMKV from 'react-native-mmkv-storage';
+import moment from 'moment';
 
 import { getNotif, sendNotif } from '../apis/notification';
 
@@ -32,7 +33,7 @@ export async function saveNotif(message){
     let notifList = JSON.parse(await MmkvStore.getStringAsync('notif'));  
 
     // Save notification messages
-    notifList[formatDate(new Date())] = message;
+    notifList[moment(new Date()).format("MMM D, YYYY h:mm A")] = message;
     if(Object.keys(notifList).length > 3)    // Remove older messages
       delete notifList[Object.keys(notifList)[0]];
 
@@ -42,28 +43,9 @@ export async function saveNotif(message){
     let notifList = {};
 
     // Save notification messages
-    notifList[formatDate(new Date())] = message;
+    notifList[moment(new Date()).format("MMM D, YYYY h:mm A")] = message;
     await MmkvStore.setStringAsync('notif', JSON.stringify(notifList));
   }
-}
-
-
-const month = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-
-function formatDate(createdDate){
-	let m = month[createdDate.getMonth()];
-	let d = createdDate.getDate();
-	let y = createdDate.getFullYear();
-	let h = createdDate.getHours();
-	let min = createdDate.getMinutes();
-	if(h > 12 && (h % 12) != 0)
-		return date = m + ' ' + d + ', ' + y + ' ' + (h % 12) + ':' + min + 'PM';
-	else if(h > 12 && (h % 12) == 0)
-		return date = m + ' ' + d + ', ' + y + ' 12:' + min + 'PM';
-	else if(h < 12 && h != 0)
-		return date = m + ' ' + d + ', ' + y + ' ' + h + ':' + min + 'AM';
-	else
-		return date = m + ' ' + d + ', ' + y + ' 12:' + min + 'AM';
 }
 
 export function sleep(ms){

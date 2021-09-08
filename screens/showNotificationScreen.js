@@ -4,7 +4,7 @@ import React, {
 } from 'react';
 import {
     Text,
-    View,
+    ScrollView,
 } from 'react-native';
 import styles from './Styles';
 import MMKV from 'react-native-mmkv-storage';
@@ -27,7 +27,7 @@ export default function showNotification(){
 	}, [refresh]);
 	
 	return(
-		<View style={styles.defaultView}>
+		<ScrollView style={styles.defaultView}>
 			<WingBlank size="lg" style={{paddingHorizontal: '5%'}}>
 				<WhiteSpace size="xl" />
 				<Text style={styles.headerText}>
@@ -35,8 +35,16 @@ export default function showNotification(){
 				</Text>
 				<WingBlank size="lg">
 					<Text style={styles.desc}>
-						Your 3 latest received notifications can be viewed here:
+						The 3 latest notifcations that says you're a probable close contact can be viewed here:
 					</Text>
+					<WhiteSpace size="lg" />
+
+					<Card>
+						<Card.Header title={"Date when notification is received"} />
+						<Card.Body><WingBlank size="lg"><Text style={styles.cardDesc}>
+						Notification details
+						</Text></WingBlank></Card.Body>
+					</Card>
 					<WhiteSpace size="lg" />
 
 					<Card>
@@ -72,6 +80,6 @@ export default function showNotification(){
 					Refresh
 				</Button>
 			</WingBlank>
-		</View>
+		</ScrollView>
 	);
 }

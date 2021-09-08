@@ -181,7 +181,7 @@ const App = () => {
 
   // Get notification from server
   // Non-zero timeout are for the background notifications
-  const getNotification = (node_id, timeout = 0) => {
+  const getNotification = (node_id, timeout = 60) => {
     // Checks if unmounted due to app being closed
     if(!notifMount.current){
       console.log('Notification unmounted...');
@@ -204,17 +204,14 @@ const App = () => {
         await notification.localNotification(title, message);       // Show notification
         sendNotification(node_id);        // Send confirmation
         saveNotif(message);       // Save the received notification message
-
-        if(timeout == 0)    // Calls function again after 1 minute
-          sleep(delay).then(() => getNotification(node_id));
-        
+        sleep(delay).then(() => getNotification(node_id));      // Calls function again after 1 minute
         return;
       })
       .catch((err) => {
         // Calls function again after 1 minute to re-attempt
         // Must be connected to net to re-attempt
         sleep(delay).then(() => {
-          if(timeout == 0 && isConnectedToNetRef.current && notifRunningRef.current)
+          if(isConnectedToNetRef.current && notifRunningRef.current)
             getNotification(node_id);
           else {
             setNotifRunning(false);

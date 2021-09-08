@@ -120,7 +120,7 @@ export default function inputToken( {route, navigation} ) {
       >
         <View style={[styles.container, styles.dimBG]}>
           <View style={styles.popUp}>
-            <Text style={styles.desc}><B>Authorization code</B></Text>
+            <Text style={styles.desc}><B>Please write down the authorization code shown below:</B></Text>
             <Text style={styles.desc}>{token}</Text>
             <WhiteSpace size="sm" />
             <Button
