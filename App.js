@@ -16,7 +16,6 @@ import {
 import BackgroundTimer from 'react-native-background-timer';
 import BleManager from 'react-native-ble-manager';
 import VIForegroundService from '@voximplant/react-native-foreground-service';
-// import GetLocation from 'react-native-get-location';
 import MMKV from 'react-native-mmkv-storage';
 import NetInfo from '@react-native-community/netinfo';
 
@@ -28,34 +27,42 @@ import registerDevice from './utilities/registerDevice';
 // Compilation of all screens
 import Screens from './screens/Screens';
 
+// Notification
+import NotificationService from './utilities/NotificationService';
+import {
+  pollServer, sendNotification, saveNotif, sleep
+} from './utilities/getNotification';
+
+
 var Buffer = require('buffer/').Buffer;
-
 var formatISO9075 = require('date-fns/formatISO9075');
-
 const {BleModule, ToastModule} = NativeModules;
+
+// to register event listers on BleModule.java
+const bleModuleEmitter = new NativeEventEmitter(BleModule);
 
 // to register event listeners on BleManager from 'react-native-ble-manager'
 const BleManagerModule = NativeModules.BleManager;
 const bleManagerEmitter = new NativeEventEmitter(BleManagerModule);
 
-// to register event listers on BleModule.java
-const bleModuleEmitter = new NativeEventEmitter(BleModule);
 
-// Notification
-import NotificationService from './utilities/NotificationService';
-import { pollServer, sendNotification, saveNotif, sleep } from './utilities/getNotification';
 
 const App = () => {
+
   // declare state variables
   const [isBleSupported, setIsBleSupported] = useState(false);
   const [currentDiscoveredDevices, setCurrentDiscoveredDevices] = useState([]);
   const [discoveryLog, setDiscoveryLog] = useState([]);
   const [recognizedDevices, setRecognizedDevices] = useState([]);
-  // const [location, setLocation] = useState([]);
   const [isConnectedToNet, setIsConnectedToNet] = useState(false);
   const [nodeId, setNodeId] = useState(null);
-  const [notifStart, setNotifStart] = useState(false);    // Start expose notification polling
-  const [notifRunning, setNotifRunning] = useState(false);    // States if the getNotification function is already running
+
+  // Start expose notification polling
+  const [notifStart, setNotifStart] = useState(false);
+
+  // States if the getNotification function is already running
+  const [notifRunning, setNotifRunning] = useState(false);
+
 
   // declare references that will store previous state values
   var intervalRef = useRef(null);
@@ -63,7 +70,6 @@ const App = () => {
   const discoveryLogRef = useRef();
   const isBleSupportedRef = useRef();
   const recognizedDevicesRef = useRef();
-  // const locationRef = useRef();
   const isConnectedToNetRef = useRef();
   const nodeIdRef = useRef();
   const notifStartRef = useRef();
@@ -76,22 +82,25 @@ const App = () => {
   // instantiate key-value storage with ID
   var MmkvStore = new MMKV.Loader().withInstanceID('bleDiscoveryLogs');
 
-  // note: useEffect runs *after* the DOM is painted (after render, as a "side effect")
+  /* note: useEffect runs *after* the DOM is painted
+  *   (after render, as a "side effect")
+  */
   useEffect(() => {
     //Starts BLEManager
     BleManager.start({showAlert: false});
 
-	// ADD EVENT LISTENERS
-
-    // Listen to discovery event 'BleManagerDiscoverPeripheral', see: https://github.com/innoveit/react-native-ble-manager
-    // and pass the event params to handleDiscoverPeripheral
-    // this even looks for peripherals
+    /* ADD EVENT LISTENERS
+    *   Listen to discovery event 'BleManagerDiscoverPeripheral',
+    *     (see: https://github.com/innoveit/react-native-ble-manager)
+    *   and pass the event params to handleDiscoverPeripheral
+    *   this even looks for peripherals
+    */
     const handlerDiscover = bleManagerEmitter.addListener(
       'BleManagerDiscoverPeripheral',
       handleDiscoverPeripheral,
     );
 
-	// event when peripheral scanning has ended
+    // event when peripheral scanning has ended
     const handlerStopScan = bleManagerEmitter.addListener(
       'BleManagerStopScan',
       handleStopScan,
@@ -108,12 +117,15 @@ const App = () => {
       console.log('network state', netStat);
 
       if(netStat)
-        setNotifStart(true);      // Start notification polling
+        // Start notification polling
+        setNotifStart(true);
+
       else
-        setNotifStart(false);      // Stop notification polling due to loss of internet
+        // Stop notification polling due to loss of internet
+        setNotifStart(false);
     });
 
-	// assign functions to mFunc in FxContext, mFuncs are used in screens
+    // assign functions to mFunc in FxContext, mFuncs are used in screens
     setMFunc({
       enableBluetooth,
       enableCamera,
@@ -123,39 +135,47 @@ const App = () => {
       getNodeId,
       nodeIdRef,
     });
-    initializeLocalStore();
 
+    initializeLocalStore();
     // getLocation();	// assign value to location state
   }, []);
+
 
   useEffect(() => {
     discoveryLogRef.current = discoveryLog;
   }, [discoveryLog]);
+
 
   useEffect(() => {
     currentDiscoveredDevicesRef.current = currentDiscoveredDevices;
     //console.log('current Discovered Devices', currentDiscoveredDevices);
   }, [currentDiscoveredDevices]);
 
+
   useEffect(() => {
     isBleSupportedRef.current = isBleSupported;
   }, [isBleSupported]);
+
 
   useEffect(() => {
     recognizedDevicesRef.current = recognizedDevices;
   }, [recognizedDevices]);
 
+
   // useEffect(() => {
   //   locationRef.current = location;
   // }, [location]);
+
 
   useEffect(() => {
     isConnectedToNetRef.current = isConnectedToNet;
   }, [isConnectedToNet]);
 
+
   useEffect(() => {
     nodeIdRef.current = nodeId;
   }, [nodeId]);
+
 
   // For exposed notification
   useEffect(() => {
@@ -164,6 +184,7 @@ const App = () => {
     // Start notification polling when connected to the internet
     if(notifStartRef.current && nodeIdRef.current != null && !notifRunningRef.current)
       getNotification(nodeIdRef.current);
+
     else
       console.log('getNotification() is not called;', notifStartRef.current, nodeIdRef.current, notifRunningRef.current);
 
@@ -173,14 +194,16 @@ const App = () => {
     notifRunningRef.current = notifRunning;
   }, [notifRunning]);
 
+
   useEffect(() => { // Ensures that getNotification stops when app is closed
     notifMount.current = true;
     return () => { notifMount.current = false };
   }, [])
 
 
-  // Get notification from server
-  // Non-zero timeout are for the background notifications
+  /* Get notification from server
+  * Non-zero timeout are for the background notifications
+  */
   const getNotification = (node_id, timeout = 60) => {
     // Checks if unmounted due to app being closed
     if(!notifMount.current){
@@ -199,12 +222,17 @@ const App = () => {
     // Create notification
     let delay = 1000 * 60;        // 1 minute
     let title = 'You\'ve been exposed';
+
     pollServer(node_id, timeout)
       .then(async (message) => {  
-        await notification.localNotification(title, message);       // Show notification
-        sendNotification(node_id);        // Send confirmation
-        saveNotif(message);       // Save the received notification message
-        sleep(delay).then(() => getNotification(node_id));      // Calls function again after 1 minute
+        // Show notification
+        await notification.localNotification(title, message);
+        // Send confirmation
+        sendNotification(node_id);
+        // Save the received notification message
+        saveNotif(message);
+        // Calls function again after 1 minute
+        sleep(delay).then(() => getNotification(node_id));
         return;
       })
       .catch((err) => {
@@ -225,7 +253,9 @@ const App = () => {
   }
 
 
-  // Get device android ID from storage; This means device is registered
+  /* Get device android ID from storage;
+  *     This means device is registered
+  */
   const fetchNodeID = useCallback(() =>
     new Promise(async (resolve, reject) => {
       try {
@@ -241,17 +271,22 @@ const App = () => {
     }),
   [], );
 
-  // get device android ID 
+
+  /* get device android ID
+  */
   const getNodeId = useCallback(() =>
     new Promise(async (resolve, reject) => {
-      //CHECKOUT if node_id changes at reinstall, and so display the node_id on screen
+      /* CHECKOUT if node_id changes at reinstall,
+      * and so display the node_id on screen
+      */
       if (isConnectedToNetRef.current) {
         let cancel = {exec: null};
         const regTOId = BackgroundTimer.setTimeout(() => {
           cancel.exec();
         }, 180000);
 
-        registerDevice(cancel)	// gets androidId from device & inserts it to the database
+        // gets androidId from device & inserts it to the database
+        registerDevice(cancel)
           .then(async node_id => {
             try {
               // store retrieved node_id
@@ -277,7 +312,9 @@ const App = () => {
     }),
   [], );
 
-  // initialize MMKVwithID local storage
+
+  /* initialize MMKVwithID local storage
+  */
   const initializeLocalStore = async () => {
     try {
       MmkvStore = await MmkvStore.initialize();
@@ -286,12 +323,16 @@ const App = () => {
     }
   };
 
-  // check availability and acquire permission to turn BLE on
+
+  /* check availability and acquire permission to turn BLE on
+  */
   const enableBluetooth = useCallback(() =>
     new Promise((resolve, reject) => {
-      // Acquire permission
-      // Android API >= 29 requires FINE_LOCATION while Android API >= 23 requires COARSE_LOCATION
-      // @see https://github.com/innoveit/react-native-ble-manager/blob/master/README.md#install
+      /*  Acquire permission
+      *       Android API >= 29 requires FINE_LOCATION
+      *       while Android API >= 23 requires COARSE_LOCATION
+      * @see https://github.com/innoveit/react-native-ble-manager/blob/master/README.md#install
+      */
       if (Platform.OS === 'android' && Platform.Version >= 29) {
         PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION)
         .then(result => {
@@ -367,9 +408,10 @@ const App = () => {
     }),
   [], );
 
-  // create the required notification channel and runs corresponding service in
-  // the background while displaying notification.
-  // VIForegroundService is tied to ap p via AndroidManifest.xml
+  /* create the required notification channel and runs corresponding service in
+  * the background while displaying notification.
+  * VIForegroundService is tied to ap p via AndroidManifest.xml
+  */
   const startForegroundService = async () => {
     if (Platform.Version >= 26) {
       const channelConfig = {
