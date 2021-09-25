@@ -5,15 +5,23 @@ import {
   Modal,
   ActivityIndicator,
 } from 'react-native';
-import styles from './Styles';
 
-import { List, Button, WhiteSpace, WingBlank, Card } from '@ant-design/react-native';
+import {
+  List,
+  Button,
+  WhiteSpace,
+  WingBlank,
+  Card
+} from '@ant-design/react-native';
+
+import styles from './Styles';
 import FxContext from '../FxContext';
+import { getToken } from '../apis/report';
 
 // For the QR code scanner camera
 import QRCodeScanner from 'react-native-qrcode-scanner';
+import * as ImagePicker from 'react-native-image-picker';
 
-import { getToken } from '../apis/report';
 
 export default class QRscanner extends React.Component {
 	static contextType = FxContext;
@@ -24,6 +32,7 @@ export default class QRscanner extends React.Component {
       isCameraOpen: false,
       showModal: true,
       showText: false,
+      resourcePath: ''
     };
   }
 
@@ -72,6 +81,35 @@ export default class QRscanner extends React.Component {
     });
   };
 
+  /* To select an image from photo gallery */
+  selectImage = async () => {
+    const options = {
+      mediaType: 'photo',
+      includeBase64: true,
+    }
+
+    console.log('Image Picker opened');
+    ImagePicker.launchImageLibrary(options, response => {
+      console.log('Response: ', response);
+
+      if (response.didCancel) {
+        console.log("User cancelled Picker");
+      }
+      else if (response.error) {
+        console.error("ImagePicker ERROR: ", response.error);
+      }
+      else {
+        let source = {
+          uri: 'data:image/jpeg;base64,' + response.data,
+          isStatic: true
+        };
+        // this.setState({resourcePath: source});
+      }
+    });
+  }
+
+
+
   render(){
     return (
       <View style={[styles.defaultView, {alignItems: 'center', justifyContent: 'center'}]}>
@@ -85,7 +123,7 @@ export default class QRscanner extends React.Component {
           <View style={[styles.container, styles.dimBG]}>
             <View style={styles.popUp}>
               <Text style={[styles.desc, { textAlign: 'center' }]}>
-                Please point your camera to a DetectPH QR code found in your lab report
+                Report QR Code is required
               </Text>
               <WhiteSpace size="xl" />
 
@@ -99,8 +137,18 @@ export default class QRscanner extends React.Component {
                 style={styles.redButton}
                 type="warning"
               > 
-              Ok
+              Open Camera to scan
               </Button>
+
+              <WhiteSpace />
+
+              <Button
+                onPress = {()=>this.selectImage()}
+                style = {styles.whiteButton}
+              >
+              Choose from Gallery
+              </Button>
+
             </View>
           </View>
         </Modal>
