@@ -82,7 +82,13 @@ export default class QRscanner extends React.Component {
   };
 
   /* To select an image from photo gallery */
-  selectImage = async () => {
+  selectImage = async (e) => {
+    this.setState({
+      isCameraOpen: false,
+      showText: true,
+    });
+    // console.log(e.data);
+
     const options = {
       mediaType: 'photo',
       includeBase64: true,
@@ -100,10 +106,10 @@ export default class QRscanner extends React.Component {
       }
       else {
         let source = {
-          uri: 'data:image/jpeg;base64,' + response.data,
+          uri: response.fileName,
           isStatic: true
         };
-        // this.setState({resourcePath: source});
+        this.setState({resourcePath: source});
       }
     });
   }
@@ -153,12 +159,18 @@ export default class QRscanner extends React.Component {
           </View>
         </Modal>
 
+        {(<QRCodeScanner
+          onRead={this.selectImage.bind(this)}
+          reactivateTimeout={4000}/>
+        )}
+
         {/* Opens camera and scan QR code */}
         {this.state.isCameraOpen && (<QRCodeScanner
           onRead={this.onSuccess.bind(this)}
           reactivate={true}
           reactivateTimeout={4000}/>
         )}
+
         {this.state.showText && (<>
           <Text style={styles.desc}>
             Checking your QR code
