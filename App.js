@@ -17,6 +17,7 @@ import BackgroundTimer from 'react-native-background-timer';
 import BleManager from 'react-native-ble-manager';
 import VIForegroundService from '@voximplant/react-native-foreground-service';
 // import GetLocation from 'react-native-get-location';
+import RNAndroidLocationEnabler from 'react-native-android-location-enabler';
 import MMKV from 'react-native-mmkv-storage';
 import NetInfo from '@react-native-community/netinfo';
 
@@ -31,6 +32,8 @@ import Screens from './screens/Screens';
 var Buffer = require('buffer/').Buffer;
 
 var formatISO9075 = require('date-fns/formatISO9075');
+const detectphUUID = '0000ff01-0000-1000-8000-00805F9B34FB';  // Service and characteristic UUID
+const detectphData = 'ff01';  // Service Data
 
 const {BleModule, ToastModule} = NativeModules;
 
@@ -42,8 +45,7 @@ const bleManagerEmitter = new NativeEventEmitter(BleManagerModule);
 const bleModuleEmitter = new NativeEventEmitter(BleModule);
 
 // Notification
-import NotificationService from './utilities/NotificationService';
-import { pollServer, sendNotification, saveNotif, sleep } from './utilities/getNotification';
+import { notification, pollServer, sendNotification, saveNotif, sleep } from './utilities/getNotification';
 
 const App = () => {
   // declare state variables
@@ -68,7 +70,7 @@ const App = () => {
   const nodeIdRef = useRef();
   const notifStartRef = useRef();
   const notifRunningRef = useRef();
-  const notifMount = useRef();;
+  const notifMount = useRef();
 
   // FxProvider value set as state in FxContext, tagged in index.js
   const {mFunc, setMFunc} = useContext(FxContext);
@@ -191,17 +193,12 @@ const App = () => {
     setNotifRunning(true);
     console.log('Getting notification...');
 
-    // Initialized notification service
-    const notification = new NotificationService(function(notif){
-      console.log("NOTIF: ", notif);
-    });
-
     // Create notification
     let delay = 1000 * 60;        // 1 minute
     let title = 'You\'ve been exposed';
     pollServer(node_id, timeout)
       .then(async (message) => {  
-        await notification.localNotification(title, message);       // Show notification
+        notification.localNotification(title, message);       // Show notification
         sendNotification(node_id);        // Send confirmation
         saveNotif(message);       // Save the received notification message
         sleep(delay).then(() => getNotification(node_id));      // Calls function again after 1 minute
@@ -329,17 +326,31 @@ const App = () => {
         });
       }
 
-      //Enables Bluetooth
+      // Since these versions are the ones that require location access
+      if (Platform.OS === 'android' && Platform.Version >= 23){
+        // Enables location
+        RNAndroidLocationEnabler.promptForEnableLocationIfNeeded({ interval: 10000, fastInterval: 5000 })
+        .then(() => console.log('The location access is already enabled or the user confirm'))
+        .catch((err) => {
+          setIsBleSupported(false); // Set to false as Bluetooth will not function without this
+          ToastModule.showToast("Can't operate without location");
+          console.error(err);
+          reject(err);
+        });
+      }
+
+      // Enables Bluetooth
       BleManager.enableBluetooth()
       .then(() => {		// then setState based on BleModule advert avail check
         BleModule.isAdvertisingSupported(res => setIsBleSupported(res));
         console.log('The bluetooth is already enabled or the user confirm');
         setTimeout(() => resolve(), 1000);
       })
-      .catch(error => {
-        ToastModule.showToast("Can't operate without bluetooth.");
+      .catch(err => {
+        setIsBleSupported(false); // Set to false as Bluetooth will not function without this
+        ToastModule.showToast("Can't operate without bluetooth");
         console.log('The user refuse to enable bluetooth');
-        reject();
+        reject(err);
       });
     }),
   [], );
@@ -475,10 +486,10 @@ const App = () => {
         for (let i = 0; i < deviceToConnect.length; i++) {
           let isConnected = false;
           var id = deviceToConnect[i].id;
-          //console.log('connecting to device ', id);
+          console.log('connecting to device ', id);
           await BleManager.connect(id)
           .then(() => {
-            //console.log('Connected to ', id);
+            console.log('Connected to ', id);
             isConnected = true;
           })
           .then(() => {
@@ -491,8 +502,8 @@ const App = () => {
             //console.log('reading data from ', id);
             await BleManager.read(
               id,
-              '0000ff01-0000-1000-8000-00805F9B34FB',		// serviceUUID
-              '0000ff01-0000-1000-8000-00805F9B34FB',		// characUUID
+              detectphUUID,		// serviceUUID
+              detectphUUID,		// characUUID
               // UUID's are declared and used in BleModule.java
             )
             .then(readData => {	// when data is read, add as recog device
@@ -577,12 +588,12 @@ const App = () => {
           console.log('local storage cant update', err);
         }
 
-        // end of commands for one 3sec interval, clear arrays
+        // end of commands for one 8 sec interval, clear arrays
         console.log('ending a run');
         setCurrentDiscoveredDevices([]);
         setDiscoveryLog([]);
         startScan(true);
-      }, 3000);
+      }, 8000);
 
       if (intervalRef.current) {
         console.log('timer started');
@@ -604,7 +615,8 @@ const App = () => {
           if (res) {		// if advert successfully started
             console.log('advertising');
             resolve();
-          }
+          } else
+            reject(err);
         });
 	    } else		// if not supported
         reject();
@@ -623,19 +635,21 @@ const App = () => {
         reject();
     });
 
-  const stopAdvertising = () => {
-    BleModule.stopBroadcastingGATT((res, res1, err) => {
-      // if (res) setIsAdvertising(false);
+  const stopAdvertising =  () => 
+    new Promise((resolve, reject) => {
+      BleModule.stopBroadcastingGATT((adv, srv, err) => {
+        if (adv && srv) resolve();
+        else reject();
+      });
     });
-  };
 
-  // scan for periphs with service UUID as below, for 1 second, allow
+  // scan for periphs with service UUID as below, for 4 seconds, allow
   // duplicate
-  const startScan = isUseUuid =>
+  const startScan = (isUseUuid) =>
     new Promise((resolve, reject) => {
       let scanUuids = [];
-      if (isUseUuid) scanUuids = ['0000ff01-0000-1000-8000-00805F9B34FB'];
-      BleManager.scan(scanUuids, 1, true)
+      if (isUseUuid) scanUuids = [detectphUUID];
+      BleManager.scan(scanUuids, 4, true)
         .then(results => {
           console.log('Start scan');
           resolve();
@@ -647,7 +661,7 @@ const App = () => {
     console.log('Scan done.');
   };
 
-  const handleDiscoverPeripheral = peripheral => {
+  const handleDiscoverPeripheral = (peripheral) => {
     var serviceData = '';
     let date = new Date().getDate(); //Current Date
     let month = new Date().getMonth(); //Current Month
@@ -661,6 +675,18 @@ const App = () => {
     function checkIfExistInLog(obj) {
       return obj.id === peripheral.id && obj.time === timeStamp;
     }
+
+    function checkIfApple(obj) {
+      return obj === 76;
+    }
+
+    // Check if the device has a DetectPH service UUID or is an Apple device
+    if(peripheral.advertising.serviceUUIDs == detectphData)
+      console.log(`${peripheral.id} has DetectPH service`);
+    else if (peripheral.advertising.manufacturerData.bytes.some(checkIfApple))
+      console.log(`${peripheral.id} is an Apple device`);
+    else
+      return;
 
 	  // check if discovered peripheral is already in discoveryLog
     let logLength = discoveryLogRef.current.length;
@@ -692,7 +718,7 @@ const App = () => {
 		    // if periph is not yet on currentDiscoveredDevices
         if (temp_currentArr.findIndex(checkIfIdExist) === -1) {
           //get the advertisement data
-          if (peripheral.advertising.serviceData.hasOwnProperty('ff01')) {
+          if (peripheral.advertising.serviceData.hasOwnProperty(detectphData)) {
             var buffer = Buffer.from(peripheral.advertising.serviceData.ff01.bytes,);
             serviceData = buffer.toString();
           }
