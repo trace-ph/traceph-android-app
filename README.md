@@ -22,6 +22,7 @@ or if you have package-lock.json and want a clean install
 	```
 	npm ci
 	```
+	
 3) Insert the following code in the file: node_modules/react-native-ble-manager/android/src/main/java/it/innove/LollipopScanManager.java
 
 ```
