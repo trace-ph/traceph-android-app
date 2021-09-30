@@ -459,7 +459,7 @@ const App = () => {
 
         const segregateList = item =>
           new Promise(resolve => {
-            if (item.data === '')
+            if (item.data === '' || item.data === "iOS")
               deviceToConnect.push(item);
             else
               temp_recognizedDevices.push(item);
@@ -467,12 +467,12 @@ const App = () => {
             resolve();
           });
 
-        // for each item in currentDiscovDevices, check if it's in recognizedDevices
+        // for each item in currentDiscovDevices, check if it's in recognizedDevices or BG iOS
         // if not, add it to deviceToConnect if its data is empty (segregate)
         // else add it to recognizedDevices
         currentDiscoveredDevicesRef.current.forEach(async item => {
           function checkIfRecognized(obj) {
-            return obj.id === item.id;
+            return obj.id === item.id && item.data !== "iOS";
           }
 
           let isRecognized = temp_recognizedDevices.some(checkIfRecognized);
@@ -486,8 +486,7 @@ const App = () => {
         for (let i = 0; i < deviceToConnect.length; i++) {
           let isConnected = false;
           var id = deviceToConnect[i].id;
-          console.log('connecting to device ', id);
-          await BleManager.connect(id)
+          await connectDevice(id)
           .then(() => {
             console.log('Connected to ', id);
             isConnected = true;
@@ -604,6 +603,19 @@ const App = () => {
     }),
   [], );
 
+  // Connecting device with custom timeout
+  const connectDevice = (id) =>
+    new Promise(async (resolve, reject) => {
+      console.log('connecting to device ', id);
+      const connectTimeout = BackgroundTimer.setTimeout(() => reject("Connect timeout"), 8000);  // Timeout after 8 seconds
+      await BleManager.connect(id);
+
+      if(connectTimeout){
+        clearTimeout(connectTimeout);
+        resolve();
+      }
+    });
+
   const stopTimer = useCallback(() => {
     BackgroundTimer.clearInterval(intervalRef.current);
   }, []);
@@ -680,12 +692,21 @@ const App = () => {
       return obj === 76;
     }
 
-    // Check if the device has a DetectPH service UUID or is an Apple device
-    if(peripheral.advertising.serviceUUIDs == detectphData)
+    /* 
+     * Check if the device has a DetectPH service UUID or is an Apple device.
+     * iOS in the foreground will be detected to have the DetectPH UUID;
+     * Else have to check the manufacturer data as that's the only way iOS in the background can be detected
+     * @see https://github.com/theheraldproject/herald-for-android/blob/b8b604eae6c43a8a56d449a7a786ebe912296b89/herald/src/main/java/io/heraldprox/herald/sensor/ble/ConcreteBLEReceiver.java#L423
+     */
+    if(peripheral.advertising.serviceData.hasOwnProperty(detectphData)){
       console.log(`${peripheral.id} has DetectPH service`);
-    else if (peripheral.advertising.manufacturerData.bytes.some(checkIfApple))
+      // get the advertisement data
+      var buffer = Buffer.from(peripheral.advertising.serviceData.ff01.bytes,);
+      serviceData = buffer.toString();
+    } else if (peripheral.advertising.manufacturerData.bytes.some(checkIfApple)){
       console.log(`${peripheral.id} is an Apple device`);
-    else
+      serviceData = "iOS";  // State the device is an iOS
+    } else
       return;
 
 	  // check if discovered peripheral is already in discoveryLog
@@ -717,12 +738,6 @@ const App = () => {
 
 		    // if periph is not yet on currentDiscoveredDevices
         if (temp_currentArr.findIndex(checkIfIdExist) === -1) {
-          //get the advertisement data
-          if (peripheral.advertising.serviceData.hasOwnProperty(detectphData)) {
-            var buffer = Buffer.from(peripheral.advertising.serviceData.ff01.bytes,);
-            serviceData = buffer.toString();
-          }
-
           temp_currentArr.push({
             id: peripheral.id,
             data: serviceData,
