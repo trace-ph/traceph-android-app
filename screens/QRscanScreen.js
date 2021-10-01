@@ -21,6 +21,7 @@ import { getToken } from '../apis/report';
 // For the QR code scanner camera
 import QRCodeScanner from 'react-native-qrcode-scanner';
 import * as ImagePicker from 'react-native-image-picker';
+import * as QRdecoder from 'react-native-qr-decode-image-camera';
 
 
 export default class QRscanner extends React.Component {
@@ -32,7 +33,10 @@ export default class QRscanner extends React.Component {
       isCameraOpen: false,
       showModal: true,
       showText: false,
-      resourcePath: ''
+      reader: {
+        message: '',
+        data: ''
+      }
     };
   }
 
@@ -44,7 +48,7 @@ export default class QRscanner extends React.Component {
     }); 
     console.log(e.data);    // Show in the Metro server log
 
-      // Send the data
+    // Send the data
     const {mFunc, setMFunc} = this.context;
     getToken(mFunc.nodeIdRef.current, e.data)
     .then((res) => {
@@ -81,38 +85,90 @@ export default class QRscanner extends React.Component {
     });
   };
 
+
+
   /* To select an image from photo gallery */
   selectImage = async (e) => {
     this.setState({
       isCameraOpen: false,
       showText: true,
     });
-    // console.log(e.data);
 
     const options = {
       mediaType: 'photo',
       includeBase64: true,
     }
 
-    console.log('Image Picker opened');
+    console.log("ImagePicker opened");
     ImagePicker.launchImageLibrary(options, response => {
-      console.log('Response: ', response);
+      console.log("\tFile opened: ", response.assets[0].fileName);
+      console.log("\tFile uri: ", response.assets[0].uri);
 
       if (response.didCancel) {
-        console.log("User cancelled Picker");
-      }
-      else if (response.error) {
-        console.error("ImagePicker ERROR: ", response.error);
-      }
-      else {
-        let source = {
-          uri: response.fileName,
-          isStatic: true
-        };
-        this.setState({resourcePath: source});
+        console.log("User cancelled image picker");
+      } else if (response.error) {
+        console.log("ImagePicker Error: ", response.error);
+      } else {
+        if (response.assets[0].uri) {
+
+          console.log("dumaan dito");
+          if (!response.assets[0].uri) {
+            path = response.assets[0].uri;
+            console.log("uri ulit 2");
+          }
+
+          QRdecoder.QRreader(response.assets[0].uri)
+          .then((out_data) => {
+            console.log(out_data);
+            this.setState({
+              reader: {
+                message: response.assets[0].uri,
+                data: out_data
+              }
+            });
+          })
+          .catch(error => {
+            console.log("nag-error po");
+            this.setState({
+              reader: {
+                message: error,
+                data: null
+              }
+            });
+          });
+
+          // Send the data
+          const {mFunc, setMFunc} = this.context;
+
+          getToken(mFunc.nodeIdRef.current, this.reader.data)
+          .then((res) => {
+            // Already reported status
+            if(res.status == 208) {
+              this.props.navigation.replace('reportVerdict', {
+                result: 'scan'
+              });
+              return;
+            }
+            // Go to Token input screen when successful
+            const { test_result, test_result_date, reference_date } = this.props.route.params;
+            this.props.navigation.replace('inputToken', {
+              data: e.data,
+              token: res.data,
+              test_result: test_result,
+              test_result_date: test_result_date,
+              reference_date: reference_date,
+            });
+          })
+          .catch((err) => {
+            console.error(err);
+            this.props.navigation.replace('reportVerdict', {
+              result: 'scan'
+            });
+          });
+        }
       }
     });
-  }
+  };
 
 
 
@@ -146,10 +202,10 @@ export default class QRscanner extends React.Component {
               Open Camera to scan
               </Button>
 
-              <WhiteSpace />
+              <WhiteSpace size="xl" />
 
               <Button
-                onPress = {()=>this.selectImage()}
+                onPress = {() => this.selectImage()}
                 style = {styles.whiteButton}
               >
               Choose from Gallery
@@ -158,11 +214,6 @@ export default class QRscanner extends React.Component {
             </View>
           </View>
         </Modal>
-
-        {(<QRCodeScanner
-          onRead={this.selectImage.bind(this)}
-          reactivateTimeout={4000}/>
-        )}
 
         {/* Opens camera and scan QR code */}
         {this.state.isCameraOpen && (<QRCodeScanner
