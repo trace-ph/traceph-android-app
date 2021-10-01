@@ -454,6 +454,7 @@ const App = () => {
       intervalRef.current = BackgroundTimer.setInterval(async () => {
         const deviceToConnect = [];
         const temp_recognizedDevices = [...recognizedDevicesRef.current];
+        const overrideApple = [];   // For iOS devices that shouldn't be considered as recognized
         console.log('recognizedDevices', temp_recognizedDevices);
         console.log('discovery log', discoveryLogRef.current);
 
@@ -513,7 +514,10 @@ const App = () => {
               temp_recognizedDevices.push(deviceToConnect[i]);
               console.log('received service data ', serviceData);
             })
-            .catch(err => console.log('read error', err))
+            .catch(err => {
+              console.log('read error', err);
+              overrideApple.push({ id: id });
+            })
             .finally(() => {	// after trying to read data, disconnect from periph
               if (isConnected) {
                 BleManager.disconnect(id, true)
@@ -530,9 +534,11 @@ const App = () => {
               .then(() => isConnected = false)
               .catch(err => console.log('disconnect error', err));
             }
+
+            overrideApple.push({ id: id });
           });
         }
-        setRecognizedDevices(temp_recognizedDevices);		// update recognized devs
+        setRecognizedDevices(temp_recognizedDevices.filter((val, index, self) => self.indexOf(val) === index));		// update recognized devs (unique elements)
 
         // get local storage
         var localStorage = [];
@@ -549,15 +555,15 @@ const App = () => {
         // That is, if it was discovered and it's deviceName/androidID was collected
         // then add to localstorage for uploading
         discoveryLogRef.current.forEach(val => {
-          function checkIfOnRecognized(obj) {
+          function checkIfExists(obj) {
             return obj.id === val.id;
           }
           function checkIfDuplicate(obj){
             return obj.node_pair == temp_recognizedDevices[recogDevIndex].data && obj.timestamp == val.time
           }
 
-          let recogDevIndex = temp_recognizedDevices.findIndex(checkIfOnRecognized,);
-          if (recogDevIndex >= 0 && !localStorage.some(checkIfDuplicate)) {		//collect contact info to upload
+          let recogDevIndex = temp_recognizedDevices.findIndex(checkIfExists,);
+          if (recogDevIndex >= 0 && !localStorage.some(checkIfDuplicate) && !overrideApple.some(checkIfExists)) {		//collect contact info to upload
             let contact = {
               type: 'direct-bluetooth',
               timestamp: val.time,
@@ -611,7 +617,7 @@ const App = () => {
       await BleManager.connect(id);
 
       if(connectTimeout){
-        clearTimeout(connectTimeout);
+        BackgroundTimer.clearTimeout(connectTimeout);
         resolve();
       }
     });
@@ -698,11 +704,13 @@ const App = () => {
      * Else have to check the manufacturer data as that's the only way iOS in the background can be detected
      * @see https://github.com/theheraldproject/herald-for-android/blob/b8b604eae6c43a8a56d449a7a786ebe912296b89/herald/src/main/java/io/heraldprox/herald/sensor/ble/ConcreteBLEReceiver.java#L423
      */
-    if(peripheral.advertising.serviceData.hasOwnProperty(detectphData)){
+    if(peripheral.advertising.serviceUUIDs == detectphData){
       console.log(`${peripheral.id} has DetectPH service`);
-      // get the advertisement data
-      var buffer = Buffer.from(peripheral.advertising.serviceData.ff01.bytes,);
-      serviceData = buffer.toString();
+      
+      if(peripheral.advertising.serviceData.hasOwnProperty(detectphData)){ // get the advertisement data
+        var buffer = Buffer.from(peripheral.advertising.serviceData.ff01.bytes,);
+        serviceData = buffer.toString();
+      }
     } else if (peripheral.advertising.manufacturerData.bytes.some(checkIfApple)){
       console.log(`${peripheral.id} is an Apple device`);
       serviceData = "iOS";  // State the device is an iOS

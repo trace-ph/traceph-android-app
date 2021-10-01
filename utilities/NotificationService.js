@@ -65,6 +65,7 @@ export default class NotificationService {
       largeIcon: 'ic_launcher_round',
 
       // How often the notification is repeated; Repeats daily at 9 AM
+      allowWhileIdle: true,
       date: dailyDate,
     });
   }
