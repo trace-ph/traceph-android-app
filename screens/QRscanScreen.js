@@ -21,7 +21,7 @@ import { getToken } from '../apis/report';
 // For the QR code scanner camera
 import QRCodeScanner from 'react-native-qrcode-scanner';
 import * as ImagePicker from 'react-native-image-picker';
-import * as QRdecoder from 'react-native-qr-decode-image-camera';
+import { QRreader } from 'react-native-qr-decode-image-camera';
 
 
 export default class QRscanner extends React.Component {
@@ -85,8 +85,6 @@ export default class QRscanner extends React.Component {
     });
   };
 
-
-
   /* To select an image from photo gallery */
   selectImage = async (e) => {
     this.setState({
@@ -111,13 +109,7 @@ export default class QRscanner extends React.Component {
       } else {
         if (response.assets[0].uri) {
 
-          console.log("dumaan dito");
-          if (!response.assets[0].uri) {
-            path = response.assets[0].uri;
-            console.log("uri ulit 2");
-          }
-
-          QRdecoder.QRreader(response.assets[0].uri)
+          QRreader(response.assets[0].uri)
           .then((out_data) => {
             this.setState({
               reader: {
@@ -125,6 +117,14 @@ export default class QRscanner extends React.Component {
                 data: out_data
               }
             });
+            setTimeout(() => {
+                this.setState({
+                  reader: {
+                    message: null,
+                    data: null
+                  }
+                });
+              }, 10000);
           })
           .catch(error => {
             this.setState({
@@ -135,9 +135,9 @@ export default class QRscanner extends React.Component {
             });
           });
 
-          // Send the data
           const {mFunc, setMFunc} = this.context;
 
+          // Send the data
           getToken(mFunc.nodeIdRef.current, this.reader.data)
           .then((res) => {
             // Already reported status
@@ -148,7 +148,9 @@ export default class QRscanner extends React.Component {
               return;
             }
             // Go to Token input screen when successful
-            const { test_result, test_result_date, reference_date } = this.props.route.params;
+            const {
+              test_result, test_result_date, reference_date
+            } = this.props.route.params;
             this.props.navigation.replace('inputToken', {
               data: e.data,
               token: res.data,
