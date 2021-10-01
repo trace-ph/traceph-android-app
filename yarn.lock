@@ -1926,7 +1926,7 @@ balanced-match@^1.0.0:
 
 base-64@^0.1.0:
   version "0.1.0"
-  resolved "https://registry.yarnpkg.com/base-64/-/base-64-0.1.0.tgz#780a99c84e7d600260361511c4877613bf24f6bb"
+  resolved "https://registry.npmjs.org/base-64/-/base-64-0.1.0.tgz"
   integrity sha1-eAqZyE59YAJgNhURxId2E78k9rs=
 
 base64-js@^1.1.2, base64-js@^1.3.1, base64-js@^1.5.1:
@@ -3365,7 +3365,7 @@ fs.realpath@^1.0.0:
 
 fsevents@^2.1.2:
   version "2.3.2"
-  resolved "https://registry.yarnpkg.com/fsevents/-/fsevents-2.3.2.tgz#8a526f78b8fdf4623b709e0b975c52c24c02fd1a"
+  resolved "https://registry.npmjs.org/fsevents/-/fsevents-2.3.2.tgz"
   integrity sha512-xiqMQR4xAeHTuB9uWm+fFRcIOgKBMiOBP+eXiyT7jsgVCq1bkVygt00oASowB7EdtpOHaaPgKt812P9ab+DDKA==
 
 function-bind@^1.1.1:
@@ -5299,7 +5299,7 @@ mockdate@^3.0.2:
 
 moment@^2.29.1:
   version "2.29.1"
-  resolved "https://registry.yarnpkg.com/moment/-/moment-2.29.1.tgz#b2be769fa31940be9eeea6469c075e35006fa3d3"
+  resolved "https://registry.npmjs.org/moment/-/moment-2.29.1.tgz"
   integrity sha512-kHmoybcPV8Sqy59DwNDY3Jefr64lK/by/da0ViFcuA4DH0vQg5Q6Ze5VimxkfQNSC+Mls/Kx53s7TjP1RhFEDQ==
 
 ms@2.0.0:
@@ -6003,7 +6003,7 @@ react-native-device-info@^5.5.5:
 
 react-native-fs@^2.18.0, react-native-fs@^2.5.1:
   version "2.18.0"
-  resolved "https://registry.yarnpkg.com/react-native-fs/-/react-native-fs-2.18.0.tgz#987b99cc90518ef26663a8d60e62104694b41c21"
+  resolved "https://registry.npmjs.org/react-native-fs/-/react-native-fs-2.18.0.tgz"
   integrity sha512-9iQhkUNnN2JNED0in06JwZy88YEVyIGKWz4KLlQYxa5Y2U0U2AZh9FUHtA04oWj+xt2LlHh0LFPCzhmNsAsUDg==
   dependencies:
     base-64 "^0.1.0"
@@ -6027,17 +6027,17 @@ react-native-get-location@^1.4.2:
 
 react-native-image-picker@^0.26.7:
   version "0.26.10"
-  resolved "https://registry.yarnpkg.com/react-native-image-picker/-/react-native-image-picker-0.26.10.tgz#0bb9ab928984948c67aee0b9e64216bee007a9fc"
+  resolved "https://registry.npmjs.org/react-native-image-picker/-/react-native-image-picker-0.26.10.tgz"
   integrity sha512-z6gAbru2E6SyGWm4ZTbiM9hPHZ5Tsl9kXGfRxW6YQXf9us7zybKoS7dKE1fQPsssv/OSvpPDKannJNncE+ATRA==
 
 react-native-image-picker@^4.1.1:
   version "4.1.1"
-  resolved "https://registry.yarnpkg.com/react-native-image-picker/-/react-native-image-picker-4.1.1.tgz#f5b20c77b060e4a8cad4e76ae042e1e45b4743da"
+  resolved "https://registry.npmjs.org/react-native-image-picker/-/react-native-image-picker-4.1.1.tgz"
   integrity sha512-O78kljfaLQkFNzba4yWueqXlAWzDNzYUavqSQloJAf+ISGsOk95WO/a4Tp27E6hck8vPtx7u0GBrvEULyh1XAw==
 
 react-native-image-resizer@^1.0.0, react-native-image-resizer@^1.4.5:
   version "1.4.5"
-  resolved "https://registry.yarnpkg.com/react-native-image-resizer/-/react-native-image-resizer-1.4.5.tgz#5a520aa8baa07638b1894a1d87d4d9a0945c8d58"
+  resolved "https://registry.npmjs.org/react-native-image-resizer/-/react-native-image-resizer-1.4.5.tgz"
   integrity sha512-33EgL3C9pyvjKpullAB6fWyD5QhoYEpNNB9rxNvUsrpAnL2mHBW7PTrUCCZudJeB6Weg7nbweKrSw1nnto5aqg==
 
 react-native-iphone-x-helper@^1.3.0, react-native-iphone-x-helper@^1.3.1:
@@ -6075,7 +6075,7 @@ react-native-permissions@^2.0.2, react-native-permissions@^2.2.2:
 
 react-native-photo-upload@^1.3.0:
   version "1.3.0"
-  resolved "https://registry.yarnpkg.com/react-native-photo-upload/-/react-native-photo-upload-1.3.0.tgz#bf442bb5ee56abb15926e0281847116a413b98b7"
+  resolved "https://registry.npmjs.org/react-native-photo-upload/-/react-native-photo-upload-1.3.0.tgz"
   integrity sha512-6kd8luPwU2DfYovd3xvLayVN+OoW00cBQD4afYlHadQFA+WinTy+mXEgYG/QV4txDSLS1EArMBaCR6h2sq2JAA==
   dependencies:
     prop-types "^15.5.10"
@@ -6090,7 +6090,7 @@ react-native-push-notification@^7.3.1:
 
 react-native-qr-decode-image-camera@^1.0.5:
   version "1.0.5"
-  resolved "https://registry.yarnpkg.com/react-native-qr-decode-image-camera/-/react-native-qr-decode-image-camera-1.0.5.tgz#e1a48294ec2c35c497f7e6310bb9654182bfe4f0"
+  resolved "https://registry.npmjs.org/react-native-qr-decode-image-camera/-/react-native-qr-decode-image-camera-1.0.5.tgz"
   integrity sha512-34gGJ3puqC5sxJFjVvKdEENDRTHHkSwSvnt3TasSqIPPxAMYZQKSjPhK8NU8ps5tLNAqbY104pWLu5KZTdpfjg==
   dependencies:
     prop-types "^15.7.2"
@@ -7441,7 +7441,7 @@ use@^3.1.0:
 
 utf8@^3.0.0:
   version "3.0.0"
-  resolved "https://registry.yarnpkg.com/utf8/-/utf8-3.0.0.tgz#f052eed1364d696e769ef058b183df88c87f69d1"
+  resolved "https://registry.npmjs.org/utf8/-/utf8-3.0.0.tgz"
   integrity sha512-E8VjFIQ/TyQgp+TZfS6l8yp/xWppSAHzidGiRrqe4bK4XP9pTRyKFgGJpO3SN7zdX4DeomTrwaseCHovfpFcqQ==
 
 util-deprecate@~1.0.1:
