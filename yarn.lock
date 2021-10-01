@@ -6088,6 +6088,13 @@ react-native-push-notification@^7.3.1:
   resolved "https://registry.npmjs.org/react-native-push-notification/-/react-native-push-notification-7.3.1.tgz"
   integrity sha512-5kSKPvDU23uZRmzgKTsGhbwGNvB2tidu1VnInBHP53ZD0VEPSBl5fbpuTfHH98ED+Gp1SCcT2/e6bJWkIspKvg==
 
+react-native-qr-decode-image-camera@^1.0.5:
+  version "1.0.5"
+  resolved "https://registry.yarnpkg.com/react-native-qr-decode-image-camera/-/react-native-qr-decode-image-camera-1.0.5.tgz#e1a48294ec2c35c497f7e6310bb9654182bfe4f0"
+  integrity sha512-34gGJ3puqC5sxJFjVvKdEENDRTHHkSwSvnt3TasSqIPPxAMYZQKSjPhK8NU8ps5tLNAqbY104pWLu5KZTdpfjg==
+  dependencies:
+    prop-types "^15.7.2"
+
 react-native-qrcode-scanner@^1.5.3:
   version "1.5.3"
   resolved "https://registry.npmjs.org/react-native-qrcode-scanner/-/react-native-qrcode-scanner-1.5.3.tgz"

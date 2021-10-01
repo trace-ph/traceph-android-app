@@ -70,6 +70,8 @@ target 'TracePH' do
 
   pod 'RNFS', :path => '../node_modules/react-native-fs'
 
+  pod 'QrCode', :path => '../node_modules/react-native-qr-decode-image-camera'
+
   target 'TracePHTests' do
     inherit! :complete
     # Pods for testing
