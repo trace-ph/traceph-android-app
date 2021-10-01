@@ -119,7 +119,6 @@ export default class QRscanner extends React.Component {
 
           QRdecoder.QRreader(response.assets[0].uri)
           .then((out_data) => {
-            console.log(out_data);
             this.setState({
               reader: {
                 message: response.assets[0].uri,
@@ -128,7 +127,6 @@ export default class QRscanner extends React.Component {
             });
           })
           .catch(error => {
-            console.log("nag-error po");
             this.setState({
               reader: {
                 message: error,
