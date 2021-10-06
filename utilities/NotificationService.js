@@ -66,6 +66,8 @@ export default class NotificationService {
 
       // How often the notification is repeated; Repeats daily at 9 AM
       allowWhileIdle: true,
+      repeatType: 'day',
+      repeatTime: 1,
       date: dailyDate,
     });
   }
