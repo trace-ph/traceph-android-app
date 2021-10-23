@@ -60,7 +60,7 @@ export default class NotificationService {
       id: this.lastId,
       channelId: 'notifDPH-channel-id',
       title: "Daily reminder",
-      message: "Good morning! Remember to open the app when you're outside or to check if you have been exposed.",
+      message: "Good day! Remember to open the app when you're outside or to check if you have been exposed.",
       smallIcon: 'ic_launcher_round',
       largeIcon: 'ic_launcher_round',
 
