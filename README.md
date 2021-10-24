@@ -1,74 +1,64 @@
 # DetectPH-android-app
+DetectPH Android is a React Native mobile app.
 
-**Privacy Policy**
+## Prerequisites
+* Node version 10 and above (NPM should be included)
+* Android Studio (Must support Android SDK 29)
+* Android device (Android 5.0 and above)
 
-DetectPH built the DetectPH app as a contact tracing mobile application, currently for COVID-19. Our goal is to become the main contact tracing app in the Philippines of not only in COVID-19 but also in other diseases. We do this by collecting records of users nearby, automating contact tracing procedures, and quickly notifying those we determined as exposed while ensuring the privacy of users. This SERVICE is provided by DetectPH at no cost and is intended for use as is.
+## Getting Started
+Here is a step-by-step instruction on how to install the app to your device. Emulators do not support bluetooth therefore they can't be used to test the app.
 
-This app is ONLY available in the Philippines and therefore will only work within the country.
+1) Clone this repository.
 
-This page is used to inform visitors regarding our policies with the collection, use, and disclosure of Personal Information if anyone decided to use our Service.
+2) Install the node modules.
 
-If you choose to use our Service, then you agree to the collection and use of information in relation to this policy. The Personal Information that we collect is used for providing and improving the Service. we will not use or share your information with anyone except as described in this Privacy Policy.
+	```
+	npm i
+	```
 
-The terms used in this Privacy Policy have the same meanings as in our Terms and Conditions, which is accessible at DetectPH unless otherwise defined in this Privacy Policy.
+or if you have package-lock.json and want a clean install
 
-**Information Collection and Use**
+	```
+	npm ci
+	```
+	
+3) Insert the following code in the file: node_modules/react-native-ble-manager/android/src/main/java/it/innove/LollipopScanManager.java
 
-While using our Service, we DO NOT require you to provide us with certain personally identifiable information, including but not limited to name, age, gender, contact number, photo, address, and/or email addresses.
+```
+public void scan(ReadableArray serviceUUIDs, final int scanSeconds, ReadableMap options,  Callback callback) {
+	...
+	// Add general iOS scan filter by default
+	filters.add(new ScanFilter.Builder().setManufacturerData(76, new byte[0], new byte[0]).build());
 
-To register, we require you to share your device ID and device model in exchange of our generated ID, which will be used for contact tracing. We also ask that you give permissions in Bluetooth and location access. We use Bluetooth to collect records of users in proximity. These records include Received Signal Strength Indicator (RSSI) and transmitted power (txPower) of your Bluetooth, the generated ID of you and your contact, and the time of contact. We DO NOT collect your location coordinates. We only use location access to ensure Bluetooth communications work. You can always OPT-OUT from creating these records by disabling contact tracing in-app. The records will be used to determine who are your close contacts to whom we'll notify their exposure. They are kept for only 3 weeks. 
+	getBluetoothAdapter().getBluetoothLeScanner().startScan(filters, scanSettingsBuilder.build(), mScanCallback);
+	...
+}
+```
 
-You may also voluntarily declare in-app of your lab test results by filling out the dates of testing and when the test result is received, and whether you're positive. By reporting to us, DetectPH will be the ones to notify your close contacts for you. The validity of your report is determined by scanning a QR code found in your test results and inputting a code you'll receive after the scan. These QR codes are only found in laboratories we are coordinating with. It will expire after 1 week or after you successfully use it to report. We only keep your reports within the day to ensure that we don't receive multiple reports from the same device.
+4) Setup a React Native environment by following these instructions: [https://reactnative.dev/docs/running-on-device](https://reactnative.dev/docs/running-on-device)
 
-The information that we request will be retained by us and used as described in this privacy policy.
-
-The app does use third party services that may collect information used to identify you.
-Link to privacy policy of third party service providers used by the app
-
-*   [Google Play Services](https://www.google.com/policies/privacy/)
-
-**Log Data**
-
-We want to inform you that whenever you use our Service, in a case of an error in the app we collect data and information (through third party products) on your phone called Log Data. This Log Data may include information such as your device Internet Protocol (“IP”) address, device name, operating system version, the configuration of the app when utilizing our Service, the time and date of your use of the Service, and other statistics.
-
-**Cookies**
-
-Cookies are files with a small amount of data that are commonly used as anonymous unique identifiers. These are sent to your browser from the websites that you visit and are stored on your device's internal memory.
-
-This Service does not use these “cookies” explicitly. However, the app may use third party code and libraries that use “cookies” to collect information and improve their services. You have the option to either accept or refuse these cookies and know when a cookie is being sent to your device. If you choose to refuse our cookies, you may not be able to use some portions of this Service.
-
-**Service Providers**
-
-We may employ third-party companies and individuals due to the following reasons:
-
-*   To facilitate our Service;
-*   To provide the Service on our behalf;
-*   To perform Service-related services; or
-*   To assist us in analyzing how our Service is used.
-
-We want to inform users of this Service that these third parties have access to your Personal Information. The reason is to perform the tasks assigned to them on our behalf. However, they are obligated not to disclose or use the information for any other purpose.
-
-**Security**
-
-We value your trust in providing us your Personal Information, thus we are striving to use commercially acceptable means of protecting it. But remember that no method of transmission over the internet, or method of electronic storage is 100% secure and reliable, and we cannot guarantee its absolute security.
-
-**Links to Other Sites**
-
-This Service may contain links to other sites. If you click on a third-party link, you will be directed to that site. Note that these external sites are not operated by us. Therefore, we strongly advise you to review the Privacy Policy of these websites. we have no control over and assume no responsibility for the content, privacy policies, or practices of any third-party sites or services.
-
-**Children’s Privacy**
-
-These Services do not address anyone under the age of 13. We do not knowingly collect personally identifiable information from children under 13\. In the case we discover that a child under 13 has provided us with personal information, we immediately delete this from our servers. If you are a parent or guardian and you are aware that your child has provided us with personal information, please contact us so that we will be able to do necessary actions.
-
-**Changes to This Privacy Policy**
-
-We may update our Privacy Policy from time to time. Thus, you are advised to review this page periodically for any changes. we will notify you of any changes by posting the new Privacy Policy on this page.
-
-This policy is effective as of 2020-04-16. Policy has been updated as of 2021-06-30.
-
-**Contact Us**
-
-If you have any questions or suggestions about our Privacy Policy, do not hesitate to contact us at detectph.updsc@gmail.com with the subject "DetectPH Concern".
+5) You should be able to see the app in your device.
 
 
-This privacy policy page was created at [privacypolicytemplate.net](https://privacypolicytemplate.net) and modified/generated by [App Privacy Policy Generator](https://app-privacy-policy-generator.firebaseapp.com/)
+### Local deployment
+If you're planning on connecting the app to your local database or to your local machine, here is a step-by-step instruction.
+
+1) Clone the following repositories found in this organization: **node-api** and **auth-api**. The auth-api repository is only available to members of the organization. However, the app will still work regardless of this server setup with the exception of the report feature.
+
+2) Follow the instructions of their corresponding README on how to setup the server.
+
+3) In the app, update the **API_URL** in the file configs/index.js to your chosen URL.
+
+4) Install the app to your device.
+
+
+## Contact Us
+Email us at [detectph.updsc@gmail.com](mailto:detectph.updsc@gmail.com).
+You can also visit our [website](https://www.detectph.com) to know more about our app.
+
+
+## Authors
+* **Gabriel Drix Lopez** - [Github](https://github.com/gabrielslach)
+* **Mart Rudolph Macion** - [Github](https://github.com/trmartmacion)
+* **Angelique Rafael** - [Github](https://github.com/JelloJill)

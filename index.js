@@ -7,6 +7,10 @@ import {name as appName} from './app.json';
 import {FxProvider} from './FxContext';
 import { DefaultTheme, Provider as PaperProvider } from 'react-native-paper';
 
+// Initialize daily notif
+import { initNotif } from './utilities/getNotification';
+initNotif();
+
 const theme = {
   ...DefaultTheme,
   colors: {

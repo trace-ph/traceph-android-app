@@ -2,8 +2,16 @@ import BackgroundTimer from 'react-native-background-timer';
 import MMKV from 'react-native-mmkv-storage';
 import moment from 'moment';
 
+import NotificationService from './NotificationService';
 import { getNotif, sendNotif } from '../apis/notification';
 
+// Main notification service for daily notifs and exposure notifs
+export const notification = new NotificationService(function(){ });
+
+// Calls the daily notifications; Only called within the main index.js
+export function initNotif(){
+  notification.dailyNotifs();
+}
 
 export function pollServer(node_id, timeout){
   return new Promise((resolve, reject) => {

@@ -36,9 +36,22 @@ export default function startReport({ navigation }) {
         </Text>
         <WingBlank size="lg">
           <Text style={styles.desc}>
-            To make a report, point the camera to the DetectPH QR code found in your lab test result. The camera will scan the QR code and get a code for you to input. Once your report is authenticated, we will use the info you filled up to find your close contacts and notify them. You can only report successfully once per day.
+            By making a report means that you <B>CONSENT</B> in giving DetectPH the following information (dates of testing, dates when results were received, COVID-19 test result) in order for us to notify your probable close contacts, and that all information you put is <B>TRUE</B>.{"\n"}
+            By scanning a DetectPH QR code, you ensure that the QR code came from your own test results and not from others. Scanning QR codes that are not your own will prevent the owner from validating their own report. These QR codes <B>DO NOT</B> include any identifiable data and serve only as an authentication. They will expire after 1 week unused or after you successfully used them to report.{"\n"}
+            You can only report successfully once per day.
             {"\n\n"}
-            <B>Remember:</B> You're only reporting for yourself and <B>not</B> on behalf of others.
+            <B>Remember:</B> All information is voluntarily given by you. You're only reporting for yourself and <B>not</B> on behalf of others.
+          </Text>
+          <WhiteSpace size="xl" />
+          <Text style={styles.desc}>
+            <B>Instructions:{"\n"}</B>
+            1) Please make sure that you have internet connection before making a report.{"\n"}
+            2) Allow camera permissions. The camera will only be used to scan QR codes.{"\n"}
+            3) Input the information being asked. These should be found in your lab test result.{"\n"}
+            4) Double check and confirm the results you've inputted.{"\n"}
+            5) Point the camera to a <B>DetectPH QR code</B> found in your lab test result. The camera will scan the QR code.{"\n"}
+            6) Authenticate your report by inputting the OTP code you'll receive after scanning.{"\n"}
+            7) Wait for your report verdict. If the report is successful, we will use the info you've given to find your close contacts and notify them.
           </Text>
           <WhiteSpace size="xl" />
         </WingBlank>
@@ -55,7 +68,7 @@ export default function startReport({ navigation }) {
         type="warning"
         style={styles.redButton}
         >
-        I understand!
+        I consent!
         </Button>
         <WhiteSpace size="lg" />
         <WhiteSpace size="lg" />

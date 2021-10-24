@@ -49,7 +49,7 @@ const DrawerStruct = (props) => {
     </View>
 	);
 };
-const headerOptions = ({navigation}) => (
+const headerOptions = ({ navigation }) => (
 	{
 		headerLeft: () => (<DrawerStruct navigationProps={navigation} />),
 		headerStyle: {
@@ -113,7 +113,7 @@ const DrawerNavigator = () => {
 	return(
 		<Drawer.Navigator initialRouteName="Contact-tracing" >
 			<Drawer.Screen name="Contact-tracing" component={BLENavigator} />
-			<Drawer.Screen name="Report" component={ReportNavigator} />
+			<Drawer.Screen name="Report" component={ReportNavigator} options={{ unmountOnBlur: true}} />
 			<Drawer.Screen name="Received notifications" component={NotifNavigator} />
 			<Drawer.Screen name="When exposed" component={ExposedNavigator} />
 			<Drawer.Screen name="About Us" component={AboutNavigator} />

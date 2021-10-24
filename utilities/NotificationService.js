@@ -49,11 +49,35 @@ export default class NotificationService {
     );
   }
 
+  // Schedule daily notifs
+  dailyNotifs(){
+    console.log("Daily notif is called");
+    this.lastId++;
+    let dailyDate = new Date();
+    dailyDate.setHours(9,0,0);
+
+    PushNotification.localNotificationSchedule({
+      id: this.lastId,
+      channelId: 'notifDPH-channel-id',
+      title: "Daily reminder",
+      message: "Good day! Remember to open the app when you're outside or to check if you have been exposed.",
+      smallIcon: 'ic_launcher_round',
+      largeIcon: 'ic_launcher_round',
+
+      // How often the notification is repeated; Repeats daily at 9 AM
+      allowWhileIdle: true,
+      repeatType: 'day',
+      repeatTime: 1,
+      date: dailyDate,
+    });
+  }
+
 
   // Shows notification
   localNotification(title, message) {
     this.lastId++;
     PushNotification.localNotification({
+      id: this.lastId,
       channelId: 'notifDPH-channel-id',
       title: title, 
       message: message,
