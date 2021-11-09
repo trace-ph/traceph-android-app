@@ -17,7 +17,7 @@ Here is a step-by-step instruction on how to install the app to your device. Emu
 	npm i
 	```
 
-or if you have package-lock.json and want a clean install
+	or if you have package-lock.json and want a clean install
 
 	```
 	npm ci
@@ -25,16 +25,16 @@ or if you have package-lock.json and want a clean install
 	
 3) Insert the following code in the file: node_modules/react-native-ble-manager/android/src/main/java/it/innove/LollipopScanManager.java
 
-```
-public void scan(ReadableArray serviceUUIDs, final int scanSeconds, ReadableMap options,  Callback callback) {
-	...
-	// Add general iOS scan filter by default
-	filters.add(new ScanFilter.Builder().setManufacturerData(76, new byte[0], new byte[0]).build());
+	```
+	public void scan(ReadableArray serviceUUIDs, final int scanSeconds, ReadableMap options,  Callback callback) {
+		...
+		// Add general iOS scan filter by default
+		filters.add(new ScanFilter.Builder().setManufacturerData(76, new byte[0], new byte[0]).build());
 
-	getBluetoothAdapter().getBluetoothLeScanner().startScan(filters, scanSettingsBuilder.build(), mScanCallback);
-	...
-}
-```
+		getBluetoothAdapter().getBluetoothLeScanner().startScan(filters, scanSettingsBuilder.build(), mScanCallback);
+		...
+	}
+	```
 
 4) Setup a React Native environment by following these instructions: [https://reactnative.dev/docs/running-on-device](https://reactnative.dev/docs/running-on-device)
 
@@ -51,6 +51,10 @@ If you're planning on connecting the app to your local database or to your local
 3) In the app, update the **API_URL** in the file configs/index.js to your chosen URL.
 
 4) Install the app to your device.
+
+
+## Important Notes
+* Phones have a battery optimization feature that could hinder the functionality of the app. In exchange of saving battery life, they kill the app instead. See this website on how to handle this: [https://dontkillmyapp.com/](https://dontkillmyapp.com/)
 
 
 ## Contact Us
