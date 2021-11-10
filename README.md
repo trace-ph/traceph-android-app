@@ -53,16 +53,20 @@ If you're planning on connecting the app to your local database or to your local
 
 4. Install the app to your device.
 
-### Uploading in Google Play Store
+### Signed Bundle/APK
+To upload an app to app distributors like Google Play Store, you are required to have the app as signed. Here is a step-by-step instructions on how to create a signed app bundle/APK.
+
 1. Open the app in Android Studio.
 
-2. Go to `Build > Generate Signed Bundle/APK...`.
+2. Update the version code and name of the app in `android/app/build.gradle`.
 
-3. Choose to generate a app bundle or APK.
+3. Go to `Build > Generate Signed Bundle/APK...`.
 
-4. Input where the keystore is and fill up the necessary information asked. Remember that the keystore password, alias, and key password is the same in `android/gradle.properties`.
+4. Choose to generate a app bundle or APK.
 
-5. Pick **release** in the build variant and click **Finish**. This will create your app.
+5. Input where the keystore is and fill up the necessary information asked. Remember that the keystore password, alias, and key password is the same in `android/gradle.properties`.
+
+6. Pick **release** in the build variant and click **Finish**. This will create your app.
 
 
 ## Important Notes
