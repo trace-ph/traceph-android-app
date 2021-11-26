@@ -14,7 +14,7 @@ Here is a step-by-step instruction on how to install the app to your device. Emu
 2) Install the node modules.
 
 	```
-	npm i
+	yarn install
 	```
 
 or if you have package-lock.json and want a clean install
@@ -22,23 +22,11 @@ or if you have package-lock.json and want a clean install
 	```
 	npm ci
 	```
-	
-3) Insert the following code in the file: node_modules/react-native-ble-manager/android/src/main/java/it/innove/LollipopScanManager.java
+NOTE: The package.json includes our own version of react-native-ble-manager as a dependency. 
 
-```
-public void scan(ReadableArray serviceUUIDs, final int scanSeconds, ReadableMap options,  Callback callback) {
-	...
-	// Add general iOS scan filter by default
-	filters.add(new ScanFilter.Builder().setManufacturerData(76, new byte[0], new byte[0]).build());
+3) Setup a React Native environment by following these instructions: [https://reactnative.dev/docs/running-on-device](https://reactnative.dev/docs/running-on-device)
 
-	getBluetoothAdapter().getBluetoothLeScanner().startScan(filters, scanSettingsBuilder.build(), mScanCallback);
-	...
-}
-```
-
-4) Setup a React Native environment by following these instructions: [https://reactnative.dev/docs/running-on-device](https://reactnative.dev/docs/running-on-device)
-
-5) You should be able to see the app in your device.
+4) You should be able to see the app in your device.
 
 
 ### Local deployment

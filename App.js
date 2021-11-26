@@ -667,7 +667,18 @@ const App = () => {
     new Promise((resolve, reject) => {
       let scanUuids = [];
       if (isUseUuid) scanUuids = [detectphUUID];
-      BleManager.scan(scanUuids, 4, true)
+      BleManager.scan(
+        scanUuids, 
+        [{ 
+          // Overflow Area advertisement of DetectPH iOS 
+          // when in background: 0xFF 4C 00 01 00 00 00 00 00 00 10 ... 
+          'id':76, 
+          'data':[1, 0, 0, 0, 0, 0, 0, 16, 0, 0, 0, 0, 0, 0, 0, 0, 0], 
+          'mask':[1, 0, 0, 0, 0, 0, 0,  1, 0, 0, 0, 0, 0, 0, 0, 0, 0], 
+        }],
+        4, 
+        true
+      )
         .then(results => {
           console.log('Start scan');
           resolve();
@@ -712,10 +723,12 @@ const App = () => {
         serviceData = buffer.toString();
       }
     } else if (peripheral.advertising.manufacturerData.bytes.some(checkIfApple)){
-      console.log(`${peripheral.id} is an Apple device`);
+      console.log(`${peripheral.id} is an Apple device with DPH silent advert packet`);
       serviceData = "iOS";  // State the device is an iOS
-    } else
+    } else{
       return;
+    }
+
 
 	  // check if discovered peripheral is already in discoveryLog
     let logLength = discoveryLogRef.current.length;
